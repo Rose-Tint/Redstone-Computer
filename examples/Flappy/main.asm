@@ -46,9 +46,9 @@
     li $r1 go_str
     call print
     main_loop_start:
-        call detect_bounce
+        ; call detect_bounce
         call shift_left
-        call detect_bounce
+        ; call detect_bounce
         ; check if need to cycle pipes
         ; cycle if pipe1_x < @PLAYER_X - 1
         load $r1 pipe1_x
@@ -57,10 +57,10 @@
         blt main_loop_no_cycle
             call cycle_pipes
         main_loop_no_cycle:
-        call detect_collision
+        ; call detect_collision
         ; if collided:
         jump main_loop_end ; branch
-        call detect_bounce
+        ; call detect_bounce
         call draw_frame
         li $r1 score
         lw $r2 [$r1]
@@ -68,6 +68,7 @@
         sw $r2 [$r1]
         jump main_loop_start
     main_loop_end:
+    exit
 
 draw_frame:
     push $r1
@@ -134,7 +135,6 @@ cycle_pipes:
     lw $r2 [$r1]
     addi $r2 $r2 @PIPE_X_GAP
     sw $r2 [$r1]
-
     li $r1 pipe2_y
     lw $r2 [$r1]
     li $r1 pipe3_y
@@ -161,28 +161,28 @@ cycle_pipes:
     return
 
 shift_left:
-    ; push $r1
-    ; push $r2
-    ; li $r1 pipe1_x
+    push $r1
+    push $r2
+    li $r1 pipe1_x
     ; shift_left_loop_start:
     ;     lw $r2 [$r1]
-    ;     sw $r1 [$r2]
+    ;     ; sw $r1 [$r2]
     ;     inc $r1
     ;     cmpi $r1 pipe2_x
     ;     ble shift_left_loop_start
-    ; pop $r2
-    ; pop $r1
+    pop $r2
+    pop $r1
     return
 
-detect_bounce:
-    return
+; detect_bounce:
+;     return
     ; if click:
     ;   player_y += @BOUNCE_HEIGHT
 
 ; return:
 ;   $r7: 1 on collision, 0 on no collision
-detect_collision:
-    return
+; detect_collision:
+;     return
     ; collision if:
     ;   @PLAYER_X == pipe1_x ; body
     ;       & (player_y <= pipe1_y)

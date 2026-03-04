@@ -1,5 +1,6 @@
 from assembler.ast.instructions import Instruction, NOOP
 import gui
+from utils import Stack
 from ..common import *
 
 
@@ -9,7 +10,7 @@ class InstructionMemory:
     def __init__(self, widget: gui.CodeDisplay):
         self.widget = widget
         self.instructions: list[Instruction] = [NOOP] * self.MAX_SIZE
-        self.call_stack: list[Addr] = []
+        self.call_stack: Stack = Stack()
         self._pc = 0
 
     @property
@@ -27,15 +28,20 @@ class InstructionMemory:
         self.pc = addr
 
     def push_cs_and_jump(self, addr: Addr):
+        print(f"DEBUG: pushing addr {addr} to [{', '.join(map(str, self.call_stack.data))}]", end="")
         if len(self.call_stack) > 16:
             raise InterpreterError("tried to push address but call stack full")
-        self.call_stack.insert(0, self.pc)
+        self.call_stack.push(self.pc)
+        print(f" -> [{', '.join(map(str, self.call_stack.data))}]")
         self.jump(addr)
 
     def pop_cs_and_jump(self):
-        if len(self.call_stack) <= 0:
-            raise InterpreterError("tried to pop address but call stack empty")
-        self.jump(self.call_stack.pop())
+        print(f"DEBUG: popping from [{', '.join(map(str, self.call_stack.data))}]", end="")
+        if self.call_stack.empty():
+            raise InterpreterError(f"tried to pop address but call stack empty (currently at addr {self.pc})")
+        addr = self.call_stack.pop()
+        print(f" -> [{', '.join(map(str, self.call_stack.data))}]")
+        self.jump(addr)
 
     def advance(self) -> Instruction:
         ins = self.instructions[self.pc]

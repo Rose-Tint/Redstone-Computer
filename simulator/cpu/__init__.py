@@ -14,9 +14,9 @@ from .registers import *
 class CPU:
     def __init__(self, gui: gui.GUI) -> None:
         self.gui = gui
-        self.instructions: InstructionMemory = InstructionMemory(self.gui.code_display)
-        self.regs: RegisterFile = RegisterFile(self.gui.registers)
-        self.ram: RAM = RAM(self.gui.ram)
+        self.instructions: InstructionMemory = InstructionMemory(gui.code_display)
+        self.regs: RegisterFile = RegisterFile(gui.registers)
+        self.ram: RAM = RAM(gui.ram)
         self.ports: IOPorts = IOPorts()
         self.overflow_flag: bool = False
         self.negative_flag: bool = False

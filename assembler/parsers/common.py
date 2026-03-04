@@ -11,7 +11,10 @@ _parser = Lark.open(
     source_path="assembler/grammar"
     )
 
-def discard(*args, **kwargs): return Discard
+# class ParseError(lark.ParseError): pass
+
+def discard(*args, **kwargs):
+    return Discard
 
 def parse_file(path: str) -> Tree:
     with open(path, "r") as file:

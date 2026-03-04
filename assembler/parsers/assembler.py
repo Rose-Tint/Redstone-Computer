@@ -90,6 +90,13 @@ class Assembler(Transformer):
                 i += 1
         return self.code
 
+    def macro_statement(self, stmt) -> ast.MacroStatement:
+        return stmt
+
+    def macro_def(self, name, params, *body):
+        self.macros[name] = ast.Macro(name, params, [*body])
+        return Discard
+
     def macro_call(self, name, *args) -> ast.MacroCall:
         return ast.MacroCall(name, [*args])
 

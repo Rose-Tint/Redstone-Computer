@@ -28,6 +28,7 @@ class CodeDisplay(QTextEdit):
             self.doc.undo()
         block = self.doc.findBlockByLineNumber(addr - 1)
         cursor = QTextCursor(block)
+        cursor.setVisualNavigation(True)
         cursor.beginEditBlock()
         format: QTextBlockFormat = cursor.blockFormat()
         format.setBackground(self.HIGHLIGHT_BG_COLOR)

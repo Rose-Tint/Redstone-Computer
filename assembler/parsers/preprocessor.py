@@ -30,15 +30,12 @@ class Preprocessor(Transformer):
                     data_segment.children += child.children
                     tree.children.pop(i)
                     continue
+            # ensures all macros are processed first by the assembler
+            if child.data == "macro_def":
+                tree.children.remove(child)
+                tree.children.insert(0, child)
             i += 1
         return Preprocessed(tree, self.defines, self.macros)
-
-    def macro_def(self, name, params, *body):
-        self.macros[name] = ast.Macro(name, params, [*body])
-        return Discard
-
-    def macro_params(self, *params) -> list[ast.MacroParam]:
-        return [*params]
 
     def definition(self, name, value):
         self.defines[name] = value

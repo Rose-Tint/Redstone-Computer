@@ -1,9 +1,9 @@
 .text
-    @PORT_GPU = 0
-    @PORT_GPU_X1 = 1
-    @PORT_GPU_Y1 = 2
-    @PORT_GPU_X2 = 3
-    @PORT_GPU_Y2 = 4
+    @PORT_GPU = 1
+    @PORT_GPU_X1 = 2
+    @PORT_GPU_Y1 = 3
+    @PORT_GPU_X2 = 4
+    @PORT_GPU_Y2 = 5
     @SCREEN_BOTTOM = 1
     @SCREEN_TOP = 64
 

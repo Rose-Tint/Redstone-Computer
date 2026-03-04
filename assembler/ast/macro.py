@@ -1,3 +1,4 @@
+from lark import Transformer
 from .common import *
 from .instructions import *
 
@@ -23,7 +24,7 @@ class MacroCall:
     name: str
     args: list[Register | Immediate]
 
-class _MacroCallArgs:
+class MacroCallArgs:
     def __init__(self, name: str, params: list[MacroParam], args: list[InstrArg]):
         if len(params) != len(args):
             params_str = ", ".join(params)
@@ -41,11 +42,12 @@ class _MacroCallArgs:
 
 def expand_macro(macro: Macro, call: MacroCall) -> CodeSegment:
     body: CodeSegment = []
-    argdict = _MacroCallArgs(macro.name, macro.params, call.args)
+    argdict = MacroCallArgs(macro.name, macro.params, call.args)
     for stmt in macro.body:
         if isinstance(stmt, LabelDecl):
             new_label = macro.generate_label(stmt.label)
             body.append(LabelDecl(new_label))
+            print(f"DEBUG:     label {new_label}")
         elif isinstance(stmt, Instruction):
             if isinstance(stmt, RegEncoded):
                 stmt.rs = argdict[stmt.rs] # type: ignore
@@ -62,7 +64,10 @@ def expand_macro(macro: Macro, call: MacroCall) -> CodeSegment:
                 stmt.rs = argdict[stmt.rs] # type: ignore
                 stmt.port = argdict[stmt.port] # type: ignore
                 stmt.imm = argdict[stmt.imm] # type: ignore
+            raise ValueError(f"invalid instruction in macro {repr(call)}")
             body.append(stmt)
+        else:
+            raise ValueError(f"invalid statement in macro {repr(call)}")
     return body
 
 
