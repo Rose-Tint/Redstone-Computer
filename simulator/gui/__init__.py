@@ -22,7 +22,7 @@ def make_column(parent: QWidget, *items: QWidget) -> QWidget:
     column.setLayout(layout)
     return column
 
-class GUI(QWidget):
+class MainGUI(QWidget):
     def __init__(self, program: Program):
         super().__init__()
         self.setWindowTitle("MC CPU Simulator")
@@ -52,7 +52,7 @@ class GUI(QWidget):
 
 app = QApplication([])
 
-def launch_gui(gui: GUI):
+def launch_gui(gui: MainGUI):
     print("Launching simulator in new window")
     gui.show()
     app.exec()

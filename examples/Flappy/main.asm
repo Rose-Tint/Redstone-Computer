@@ -4,9 +4,10 @@
     @BOUNCE_HEIGHT = 3
     @PLAYER_X = 28
     @WINDOW_TOP = 33
-    @TEXT_DISPLAY_BUFFER = 8
-    @TEXT_DISPLAY_FUNCTION = 9
-    @RNG = 10
+    @PORT_TEXT_DISPLAY_BUFFER = 8
+    @PORT_TEXT_DISPLAY_FUNCTION = 9
+    @PORT_RNG = 10
+    @PORT_MOUSE = 11
 
 .data
     player_y: word 0
@@ -23,6 +24,7 @@
     loading_str: cstring "LOADING..."
     ready_str: cstring "READY?"
     go_str: cstring "GO!"
+    game_over_str: cstring "GAME OVER!"
 
 .macro load %reg %addr
     li %reg %addr
@@ -46,9 +48,8 @@
     li $r1 go_str
     call print
     main_loop_start:
-        ; call detect_bounce
-        call shift_left
-        ; call detect_bounce
+        call detect_bounce
+        call shift_pipes_left
         ; check if need to cycle pipes
         ; cycle if pipe1_x < @PLAYER_X - 1
         load $r1 pipe1_x
@@ -59,7 +60,7 @@
         main_loop_no_cycle:
         ; call detect_collision
         ; if collided:
-        jump main_loop_end ; branch
+        ; jump main_loop_end ; branch
         ; call detect_bounce
         call draw_frame
         li $r1 score
@@ -68,6 +69,8 @@
         sw $r2 [$r1]
         jump main_loop_start
     main_loop_end:
+    li $r1 game_over_str
+    call print
     exit
 
 draw_frame:
@@ -147,7 +150,7 @@ cycle_pipes:
     sw $r3 [$r1]
     li $r1 pipe4_y
     sw $r4 [$r1]
-    rp $r2 @RNG
+    rp $r2 @PORT_RNG
     shl $r2 $r2
     shl $r2 $r2
     shl $r2 $r2
@@ -160,21 +163,38 @@ cycle_pipes:
     pop $r1
     return
 
-shift_left:
+shift_pipes_left:
     push $r1
     push $r2
-    li $r1 pipe1_x
-    ; shift_left_loop_start:
-    ;     lw $r2 [$r1]
-    ;     ; sw $r1 [$r2]
-    ;     inc $r1
-    ;     cmpi $r1 pipe2_x
-    ;     ble shift_left_loop_start
+    li $r1 pipe1_x ; r1 = pipe address
+    shift_left_loop_start:
+        lw $r2 [$r1] ; r2 = x position of pipe
+        inc $r2 ; move pipe x left 1
+        sw $r2 [$r1]
+        inc $r1 ; go to next pipe
+        cmpi $r1 pipe4_x
+        ble shift_left_loop_start
     pop $r2
     pop $r1
     return
 
-; detect_bounce:
+detect_bounce:
+    push $r1
+    push $r2
+    push $r3
+    rp $r1 @PORT_MOUSE
+    li $r2 player_y
+    detect_bounce_loop_start:
+        cmpi $r1 0
+        bne detect_bounce_loop_start
+        lw $r3 [$r2]
+        addi $r3 $r3 @BOUNCE_HEIGHT
+        dec $r1
+    detect_bounce_loop_end:
+    pop $r3
+    pop $r2
+    pop $r1
+    return
 ;     return
     ; if click:
     ;   player_y += @BOUNCE_HEIGHT
@@ -198,13 +218,13 @@ print:
     push $r2
     print_loop_start:
         lw $r2 [$r1]
-        addi $r1 $r1 1
+        inc $r1
         cmp $r2 $zero
         beq print_loop_end
-        wp $r2 @TEXT_DISPLAY_BUFFER
+        wp $r2 @PORT_TEXT_DISPLAY_BUFFER
         jump print_loop_start
     print_loop_end:
-    wp $zero @TEXT_DISPLAY_FUNCTION
+    wp $zero @PORT_TEXT_DISPLAY_FUNCTION
     pop $r2
     pop $r1
     return

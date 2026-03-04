@@ -12,7 +12,7 @@ from .registers import *
 
 
 class CPU:
-    def __init__(self, gui: gui.GUI) -> None:
+    def __init__(self, gui: gui.MainGUI) -> None:
         self.gui = gui
         self.instructions: InstructionMemory = InstructionMemory(gui.code_display)
         self.regs: RegisterFile = RegisterFile(gui.registers)
@@ -27,8 +27,22 @@ class CPU:
 
     @Slot()
     def step(self) -> None:
-        instruction = self.instructions.advance()
-        self.execute(instruction)
+        if self.finished:
+            return
+        instruction = None
+        try:
+            instruction = self.instructions.advance()
+            self.execute(instruction)
+        except InterpreterError as err:
+            if isinstance(err, UnexpectedEndOfInstrMem):
+                self.finished = True
+            pc = self.instructions.pc
+            msg = f"Error while executing instruction {pc}"
+            if instruction is not None:
+                msg += f" ({repr(instruction)})"
+            print(msg)
+            err.__traceback__ = None
+            raise err
 
     def set_flags(self, value: Word) -> Word:
         self.negative_flag = value < 0
@@ -138,6 +152,7 @@ class CPU:
                 self.regs[rs] = self.var_stack.pop()
             case Opcode.EXIT:
                 self.finished = True
+                print("DEBUG: Program finished!")
             case _:
                 raise InterpreterError(f"invalid special-encoded instruction {opcode}")
 

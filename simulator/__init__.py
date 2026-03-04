@@ -1,7 +1,8 @@
 from asyncio import sleep
 from threading import Thread
 from assembler import Program
-from gui import launch_gui, GUI
+from PySide6.QtWidgets import QMainWindow
+from gui import launch_gui, MainGUI
 from gui.control import RunState
 from .common import *
 from .cpu import CPU
@@ -11,7 +12,7 @@ from .inputs.pixel_display import *
 
 
 async def run_simulator(program: Program) -> None:
-    gui = GUI(program)
+    gui = MainGUI(program)
     cpu = CPU(gui)
     cpu.instructions.load(program.code)
     cpu.ram.load(program.data)

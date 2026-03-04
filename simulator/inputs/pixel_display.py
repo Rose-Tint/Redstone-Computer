@@ -24,13 +24,11 @@ class PixelDisplay:
         self.y2_port.output_written.connect(self.y2_slot)
 
     @Slot()
-    async def op_slot(self, value: int) -> None:
-        if value == 1:
-            self.widget.draw_pixel(self.x1_arg, self.y1_arg)
-        elif value == 2:
-            self.widget.draw_square(self.x1_arg, self.y1_arg, self.x2_arg, self.y2_arg)
+    def op_slot(self, _value: int) -> None:
+        if self.x2_arg == 0 or self.y2_arg == 0:
+            self.widget.draw_pixel(self.x1_arg-1, self.y1_arg-1)
         else:
-            raise InterpreterError(f"Invalid GPU operation: {value}")
+            self.widget.draw_square(self.x1_arg-1, self.y1_arg-1, self.x2_arg-1, self.y2_arg-1)
         self.x1_arg = 0
         self.y1_arg = 0
         self.x2_arg = 0

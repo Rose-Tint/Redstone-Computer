@@ -41,31 +41,38 @@ class MacroCallArgs:
             return arg
 
 def expand_macro(macro: Macro, call: MacroCall) -> CodeSegment:
+    # print(f"DEBUG: expanding macro {repr(macro.name)}")
     body: CodeSegment = []
     argdict = MacroCallArgs(macro.name, macro.params, call.args)
+    # print(f"DEBUG:   argdict:")
+    # for param, arg in argdict.data.items():
+    #     print(f"DEBUG:     {param} -> {repr(arg)}")
+    # print(f"DEBUG:   statements:")
     for stmt in macro.body:
         if isinstance(stmt, LabelDecl):
             new_label = macro.generate_label(stmt.label)
             body.append(LabelDecl(new_label))
-            print(f"DEBUG:     label {new_label}")
         elif isinstance(stmt, Instruction):
+            # print(f"DEBUG:     {repr(stmt)}", end="")
             if isinstance(stmt, RegEncoded):
-                stmt.rs = argdict[stmt.rs] # type: ignore
-                stmt.rt = argdict[stmt.rt] # type: ignore
-                stmt.rd = argdict[stmt.rd] # type: ignore
+                stmt.rs = argdict[stmt.rs]
+                stmt.rt = argdict[stmt.rt]
+                stmt.rd = argdict[stmt.rd]
             elif isinstance(stmt, ImmEncoded):
-                stmt.rs = argdict[stmt.rs] # type: ignore
-                stmt.rt = argdict[stmt.rt] # type: ignore
-                stmt.imm = argdict[stmt.imm] # type: ignore
+                stmt.rs = argdict[stmt.rs]
+                stmt.rt = argdict[stmt.rt]
+                stmt.imm = argdict[stmt.imm]
             elif isinstance(stmt, JumpEncoded):
-                stmt.label = argdict[stmt.label] # type: ignore
-                stmt.addr = argdict[stmt.addr] # type: ignore
+                stmt.label = argdict[stmt.label]
+                # stmt.addr = argdict[stmt.addr]
             elif isinstance(stmt, SpecEncoded):
-                stmt.rs = argdict[stmt.rs] # type: ignore
-                stmt.port = argdict[stmt.port] # type: ignore
-                stmt.imm = argdict[stmt.imm] # type: ignore
-            raise ValueError(f"invalid instruction in macro {repr(call)}")
+                stmt.rs = argdict[stmt.rs]
+                stmt.port = argdict[stmt.port]
+                stmt.imm = argdict[stmt.imm]
+            else:
+                raise ValueError(f"invalid instruction in macro {repr(call)}")
             body.append(stmt)
+            # print(f" -> {repr(stmt)}")
         else:
             raise ValueError(f"invalid statement in macro {repr(call)}")
     return body

@@ -11,7 +11,7 @@ class RegisterFile:
     def __setitem__(self, register: ast.Register, value: Word):
         regn = register.value
         if regn == 0:
-            raise InterpreterError("tried to set register 0")
+            return # writing to $zero does nothing
         elif regn > 7 or regn < 0:
             raise InterpreterError(f"invalid register {regn}")
         else:

@@ -110,7 +110,7 @@ class Assembler(Transformer):
             return ast.SpecEncoded(opcode, ast.Zero, 0)
 
     def arith_log(self, opcode: Opcode, rd, rs, rt) -> ast.RegEncoded:
-        return ast.RegEncoded(opcode, rd, rs, rt)
+        return ast.RegEncoded(opcode, rs, rt, rd)
 
     def arith_i(self, opcode: Opcode, rs, rt, imm) -> ast.ImmEncoded:
         return ast.ImmEncoded(opcode, rs, rt, imm)

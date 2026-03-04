@@ -5,7 +5,12 @@ Word: TypeAlias = int
 
 Addr: TypeAlias = int
 
-class InterpreterError(Exception): pass
+class InterpreterError(Exception):
+    pass
+
+class UnexpectedEndOfInstrMem(InterpreterError):
+    def __init__(self, msg: str = ""):
+        super().__init__("Unexpectedly reached end of instruction memory " + msg)
 
 def bounds_check(n: Word) -> Word:
     if -128 > n or n > 255:
