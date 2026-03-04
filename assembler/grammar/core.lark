@@ -1,0 +1,33 @@
+%import common (ESCAPED_STRING, LETTER, DIGIT, INT, NEWLINE, WS_INLINE, WS)
+
+
+label_decl      : LABEL ":"
+
+?immediate      : DEFINE    -> define
+                | LABEL     -> named_imm
+                | INT
+                | CHAR
+
+REG             : "$zero"
+                | "$r1"
+                | "$r2"
+                | "$r3"
+                | "$r4"
+                | "$r5"
+                | "$r6"
+                | "$r7"
+
+line{body}     : body NEWLINE+
+
+DEFINE          : "@" LABEL
+
+COMMENT         : ";" /[^\n]*/
+LABEL           : LETTER ("_"|LETTER|DIGIT)*
+ESCAPE_CHAR     : /\\[abfnrtv0\\\'\"]/
+CHAR_INNER      : /[^\'\\]/ | ESCAPE_CHAR
+STRING_INNER    : /[^\"\\]/ | ESCAPE_CHAR
+CHAR            : "'" CHAR_INNER "'"
+STRING          : "\"" STRING_INNER* "\""
+
+%ignore COMMENT
+%ignore WS_INLINE

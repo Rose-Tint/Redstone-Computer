@@ -1,0 +1,19 @@
+%import common (WS, WS_INLINE)
+%import .code.code_segment
+%import .data_text.data_segment
+%import .data_text.text_segment
+%import .macro.macro_def
+%import core (STRING, COMMENT)
+
+program     : (WS* _segment)* WS*
+
+_segment    : text_segment
+            | macro_def
+            | data_segment
+            | code_segment
+            | import_file
+
+import_file : ".import" STRING
+
+%ignore COMMENT
+%ignore WS_INLINE

@@ -1,0 +1,70 @@
+%import common.WS_INLINE
+%import core.COMMENT
+
+
+instruction{reg, imm, label}    : NO_ARGS_OP    -> no_args
+                | ARITH_LOG_OP reg reg reg      -> arith_log
+                | ARITH_I_OP reg reg imm        -> arith_i
+                | MEMORY_OP reg "[" reg "]"     -> memory_ins
+                | SHIFT_CMP_OP reg reg          -> shift_cmp
+                | ONE_REG_IMM_OP reg imm        -> one_reg_imm
+                | PUSH_POP_OP reg               -> push_pop
+                | JUMP_OP label                 -> jump
+                | PSUEDO_NOT_OP reg reg         -> psuedo_not
+                # | PSUEDO_BR_OP reg reg label    -> psuedo_branch
+
+NO_ARGS_OP      : "noop"i
+                | "return"i
+                | "exit"i
+
+ARITH_LOG_OP    : "add"i
+                | "sub"i
+                | "and"i
+                | "or"i
+                | "xor"i
+                | "nor"i
+
+ARITH_I_OP      : "addi"i
+                | "subi"i
+
+MEMORY_OP       : "lw"i
+                | "sw"i
+
+SHIFT_CMP_OP    : "shl"i
+                | "shr"i
+                | "cmp"i
+
+ONE_REG_IMM_OP  : "li"i
+                | "rp"i
+                | "wp"i
+                | "cmpi"i
+
+PUSH_POP_OP     : "push"i
+                | "pop"i
+
+JUMP_OP         : "jump"i
+                | "call"i
+                # |  "brz"i
+                # |  "bnz"i
+                # |  "bro"i
+                # |  "bno"i
+                # |  "brn"i
+                # |  "bnn"i
+                | ("beq"i | "brz"i)
+                | ("bne"i | "bnz"i)
+                | ("bgt"i | "bro"i)
+                | ("bge"i | "bno"i)
+                | ("blt"i | "brn"i)
+                | ("ble"i | "bnn"i)
+
+PSUEDO_NOT_OP   : "not"i
+
+# PSUEDO_BR_OP    : "beq"i
+#                 | "bne"i
+#                 | "bgt"i
+#                 | "bge"i
+#                 | "blt"i
+#                 | "ble"i
+
+%ignore COMMENT
+%ignore WS_INLINE

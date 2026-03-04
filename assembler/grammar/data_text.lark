@@ -1,0 +1,21 @@
+%import common (WS_INLINE, NEWLINE, INT)
+%import .core (line, label_decl, LABEL, DEFINE, CHAR, STRING, COMMENT)
+
+
+text_segment    : ".text" NEWLINE line{definition}*
+
+definition      : DEFINE "=" INT
+
+data_segment    : ".data" NEWLINE* line{data_def}*
+
+data_def        : LABEL ":" data_body
+                | "#align" INT          -> align_data
+
+data_body       : "char" CHAR       -> char_data
+                | "cstring" STRING  -> cstring_data
+                | "pstring" STRING  -> pstring_data
+                | "space" INT       -> space_data
+                | "word" INT        -> word_data
+
+%ignore COMMENT
+%ignore WS_INLINE
