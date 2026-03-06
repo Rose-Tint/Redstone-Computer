@@ -1,8 +1,10 @@
 from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy, QScrollArea
+from assembler import Program
 from .common import table_cell
+from ...common import Reloadable
 
 
-class RAM(QScrollArea):
+class RAM(QScrollArea, Reloadable):
     MAX_SIZE = 255
 
     def __init__(self, parent: QWidget):
@@ -13,9 +15,7 @@ class RAM(QScrollArea):
         vheader = self.table.verticalHeader()
         vheader.setSectionResizeMode(hheader.ResizeMode.Stretch)
         self.table.setVerticalHeaderLabels([f"{i}-{i+3}" for i in range(0, self.MAX_SIZE, 4)])
-        self.update_ram([0] * (self.MAX_SIZE + 1))
-        # for addr in range(self.MAX_SIZE):
-        #     self.write(addr, 0)
+        self.reset()
         self.table.resizeColumnsToContents()
         self.table.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         self.table.adjustSize()
@@ -31,3 +31,13 @@ class RAM(QScrollArea):
         assert len(ram) == self.MAX_SIZE + 1
         for addr, value in enumerate(ram):
             self.write(addr, value)
+
+    def reset(self) -> None:
+        self.update_ram([0] * (self.MAX_SIZE + 1))
+
+    def load_program(self, program: Program) -> None:
+        self.reset()
+        data = program.data + [0] * (self.MAX_SIZE - len(program.data) + 1)
+        self.update_ram(data)
+        # for addr, value in enumerate(program.data):
+        #     self.write(addr, value)

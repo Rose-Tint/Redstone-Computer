@@ -1,9 +1,11 @@
 from PySide6.QtCore import Qt, Slot, Signal
 from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QLineEdit, QSizePolicy
+from assembler import Program
 from utils import Queue
+from ..common import Reloadable
 
 
-class Keyboard(QWidget):
+class Keyboard(QWidget, Reloadable):
     # TODO: is this up to date?
     ENTER = "\n"
     RESET = "\x18"
@@ -96,4 +98,7 @@ class Keyboard(QWidget):
                 text += ch
         self.text.setText(text)
 
-
+    def reset(self) -> None:
+        self.submitted = False
+        self.buffer.clear()
+        self.update_display()

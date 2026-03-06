@@ -2,6 +2,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QLabel, QGridLayout, QSizePolicy
 from PySide6.QtGui import QMouseEvent, QPixmap
 
+from assembler import Program
+from ..common import Reloadable
+
 
 class Pixel(QLabel):
     PX_WIDTH = PX_HEIGHT = 6
@@ -17,16 +20,16 @@ class Pixel(QLabel):
         self.off()
 
     def on(self) -> None:
-        texture = QPixmap("gui/assets/redstone_lamp_on.png")
+        texture = QPixmap("simulator/gui/assets/redstone_lamp_on.png")
         self.setPixmap(texture.scaled(self.size()))
         self.is_on = True
 
     def off(self) -> None:
-        texture = QPixmap("gui/assets/redstone_lamp_off.png")
+        texture = QPixmap("simulator/gui/assets/redstone_lamp_off.png")
         self.setPixmap(texture.scaled(self.size()))
         self.is_on = False
 
-class PixelDisplay(QWidget):
+class PixelDisplay(QWidget, Reloadable):
     MAX_WIDTH = MAX_HEIGHT = 63
 
     def __init__(self, parent: QWidget | None):
@@ -60,3 +63,8 @@ class PixelDisplay(QWidget):
         for column in self.pixels:
             for pixel in column:
                 pixel.off()
+
+    def reset(self) -> None:
+        for pxs in self.pixels:
+            for px in pxs:
+                px.off()

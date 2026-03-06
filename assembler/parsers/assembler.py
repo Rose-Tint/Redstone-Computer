@@ -35,7 +35,6 @@ class Assembler(Transformer):
                 self.data.extend(data.data)
             else:
                 print(f"DEBUG: skipping data {data}")
-        # return Discard
 
     def data_def(self, label: ast.Label, data: ast.Data) -> ast.DataDef:
         return ast.DataDef(label, data)

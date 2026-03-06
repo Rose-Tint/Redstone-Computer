@@ -1,11 +1,13 @@
 from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy
+from assembler import Program
 from .common import table_cell
+from ...common import Reloadable
 
 
-class RegisterFile(QTableWidget):
+class RegisterFile(QTableWidget, Reloadable):
     def __init__(self, parent: QWidget):
         super().__init__(1, 7, parent)
-        self.update_registers([0] * 7)
+        self.reset()
         self.setHorizontalHeaderLabels([f"$r{i+1}" for i in range(7)])
         self.verticalHeader().hide()
         # self.resizeColumnsToContents()
@@ -22,3 +24,9 @@ class RegisterFile(QTableWidget):
         assert len(registers) == 7
         for i, value in enumerate(registers):
             self.write(i, value)
+
+    def reset(self) -> None:
+        self.update_registers([0] * 7)
+
+    def load_program(self, program: Program) -> None:
+        return None

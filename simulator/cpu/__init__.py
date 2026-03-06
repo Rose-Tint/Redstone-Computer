@@ -4,14 +4,14 @@ from assembler.ast.instructions import RegEncoded
 from assembler.ast.instructions import ImmEncoded
 from assembler.ast.instructions import JumpEncoded
 from assembler.ast.instructions import SpecEncoded
-import gui
+from .. import gui
 from ..io_ports import *
 from .instruction_memory import *
 from .ram import *
 from .registers import *
 
 
-class CPU:
+class CPU(Reloadable):
     def __init__(self, gui: gui.MainGUI) -> None:
         self.gui = gui
         self.instructions: InstructionMemory = InstructionMemory(gui.code_display)
@@ -21,9 +21,25 @@ class CPU:
         self.overflow_flag: bool = False
         self.negative_flag: bool = False
         self.zero_flag: bool = False
-        self.var_stack: list[Word] = []
+        self.var_stack: Stack = Stack()
         self.finished = False
         self.gui.program_control.step.connect(self.step)
+        self.gui.reset_sig.connect(self.reset)
+        self.gui.load_program_sig.connect(self.load_program)
+
+    @Slot()
+    def reset(self) -> None:
+        for _, member in self.__dict__.items():
+            if isinstance(member, Reloadable) and not isinstance(member, QWidget):
+                member.reset()
+        self.finished = False
+        self.var_stack.clear()
+
+    @Slot()
+    def load_program(self, program: gui.Program) -> None:
+        for _, member in self.__dict__.items():
+            if isinstance(member, Reloadable) and not isinstance(member, QWidget):
+                member.load_program(program)
 
     @Slot()
     def step(self) -> None:
@@ -145,7 +161,7 @@ class CPU:
             case Opcode.PUSH:
                 if len(self.var_stack) > 16:
                     raise InterpreterError("tried to push to var stack while stack full")
-                self.var_stack.insert(0, self.regs[rs])
+                self.var_stack.push(self.regs[rs])
             case Opcode.POP:
                 if len(self.var_stack) <= 0:
                     raise InterpreterError("tried to push to var stack while stack full")
@@ -155,5 +171,3 @@ class CPU:
                 print("DEBUG: Program finished!")
             case _:
                 raise InterpreterError(f"invalid special-encoded instruction {opcode}")
-
-

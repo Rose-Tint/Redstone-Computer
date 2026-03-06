@@ -1,10 +1,10 @@
 from assembler.ast.instructions import Instruction, NOOP
-import gui
+from .. import gui
 from utils import Stack
 from ..common import *
 
 
-class InstructionMemory:
+class InstructionMemory(Reloadable):
     MAX_SIZE = 1024
 
     def __init__(self, widget: gui.CodeDisplay):
@@ -47,7 +47,8 @@ class InstructionMemory:
         self.pc += 1
         return ins
 
-    def load(self, instructions: list[Instruction]) -> None:
+    def load_program(self, program: gui.Program) -> None:
+        instructions = program.code
         size = len(instructions)
         if size > self.MAX_SIZE:
             raise InterpreterError(f"program too big: {size} (max is {self.MAX_SIZE})")

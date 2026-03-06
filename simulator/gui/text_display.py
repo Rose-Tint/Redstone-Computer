@@ -1,8 +1,10 @@
+from assembler import Program
+from ..common import Reloadable
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QLineEdit, QGridLayout, QLabel
 
 
-class TextDisplay(QWidget):
+class TextDisplay(QWidget, Reloadable):
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self.buffer = QLineEdit(self, readOnly=True)
@@ -18,4 +20,6 @@ class TextDisplay(QWidget):
         grid.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(grid)
 
-
+    def reset(self) -> None:
+        self.buffer.setText("")
+        self.display.setText("")

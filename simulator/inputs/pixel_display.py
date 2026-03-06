@@ -1,6 +1,6 @@
 from asyncio import Task, create_task
 from dataclasses import dataclass
-import gui
+from .. import gui
 from ..common import InterpreterError
 from ..io_ports import Port, Slot
 

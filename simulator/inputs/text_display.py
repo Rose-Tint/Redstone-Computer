@@ -1,4 +1,4 @@
-import gui
+from .. import gui
 from ..io_ports import Port, Slot
 
 

@@ -1,6 +1,6 @@
 from asyncio import Task, create_task
 from utils import Queue
-import gui
+from .. import gui
 from ..io_ports import Port, Slot
 
 

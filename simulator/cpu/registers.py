@@ -1,9 +1,10 @@
 from ..common import *
 from assembler import ast
-import gui
+from .. import gui
+from ..common import Reloadable
 
 
-class RegisterFile:
+class RegisterFile(Reloadable):
     def __init__(self, widget: gui.RegisterFile) -> None:
         self.widget = widget
         self.registers: list[Word] = [0] * 8
@@ -25,5 +26,8 @@ class RegisterFile:
             raise InterpreterError(f"invalid register {regn}")
         else:
             return self.registers[regn]
+
+    def reset(self) -> None:
+        self.registers = [0] * 8
 
 

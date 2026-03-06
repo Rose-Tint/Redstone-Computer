@@ -1,21 +1,13 @@
 from ..common import *
-import gui
+from .. import gui
+from ..common import Reloadable
 
 
-class RAM:
+class RAM(Reloadable):
     MAX_SIZE = 256
     def __init__(self, widget: gui.RAM) -> None:
         self.widget = widget
         self.ram: list[Word] = [0] * self.MAX_SIZE
-
-    def load(self, ram: list[Word]) -> None:
-        size = len(ram)
-        if size > self.MAX_SIZE:
-            raise InterpreterError(f"program too big: {size} (max is {self.MAX_SIZE})")
-        while len(ram) < self.MAX_SIZE:
-            ram.append(0)
-        self.ram = ram
-        self.widget.update_ram(self.ram)
 
     def __setitem__(self, addr: int, value: Word):
         if 0 > addr or addr >= self.MAX_SIZE:
@@ -31,3 +23,14 @@ class RAM:
         else:
             return self.ram[addr]
 
+    def reset(self) -> None:
+        self.ram = [0] * self.MAX_SIZE
+
+    def load_program(self, program: gui.Program) -> None:
+        size = len(program.data)
+        if size > self.MAX_SIZE:
+            raise InterpreterError(f"program too big: {size} (max is {self.MAX_SIZE})")
+        while len(program.data) < self.MAX_SIZE:
+            program.data.append(0)
+        self.ram = program.data
+        self.widget.update_ram(self.ram)

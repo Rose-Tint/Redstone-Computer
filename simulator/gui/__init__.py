@@ -1,10 +1,8 @@
-from asyncio import Task, create_task
-from collections.abc import Callable
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import QGridLayout, QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from PySide6.QtGui import QPixmap
-from assembler import Program
-# from .common import QAlign
+from assembler import Program, assemble
+from ..common import Reloadable, ResetEvent, LoadProgramEvent
 from .keyboard import Keyboard
 from .pixel_display import PixelDisplay
 from .code_display import CodeDisplay
@@ -23,13 +21,16 @@ def make_column(parent: QWidget, *items: QWidget) -> QWidget:
     return column
 
 class MainGUI(QWidget):
-    def __init__(self, program: Program):
+    reset_sig = Signal()
+    load_program_sig = Signal(Program)
+
+    def __init__(self):
         super().__init__()
         self.setWindowTitle("MC CPU Simulator")
-        self.setWindowIcon(QPixmap("gui/assets/redstone_lamp_on.png"))
+        self.setWindowIcon(QPixmap("simulator/gui/assets/redstone_lamp_on.png"))
         self.pixel_display = PixelDisplay(self)
         self.keyboard = Keyboard(self)
-        self.code_display = CodeDisplay(self, program.code)
+        self.code_display = CodeDisplay(self)
         self.registers = RegisterFile(self)
         self.ram = RAM(self)
         self.program_control = ProgramControl(self)
@@ -49,6 +50,21 @@ class MainGUI(QWidget):
             self.keyboard
             ), 0, 1, -1, 1)
         self.setLayout(layout)
+        self.code_display.file_dropped.connect(self.load_program)
+
+    @Slot()
+    def load_program(self, fpath: str, program: Program | None = None) -> None:
+        print(f"Loading new program {fpath}")
+        program = program or assemble(fpath)
+        self.load_program_sig.emit(program)
+        event = LoadProgramEvent(program)
+        app.sendEvent(self.pixel_display, event)
+        app.sendEvent(self.keyboard, event)
+        app.sendEvent(self.code_display, event)
+        app.sendEvent(self.registers, event)
+        app.sendEvent(self.ram, event)
+        app.sendEvent(self.text_display, event)
+        app.sendEvent(self.program_control, event)
 
 app = QApplication([])
 
