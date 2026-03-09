@@ -8,6 +8,7 @@ from . import ast
 #
 @dataclass
 class Program:
+    filepath: str
     code: ast.ResolvedCode
     machine_code: list[str]
     data: list[int]
@@ -21,4 +22,4 @@ def assemble(filepath: str) -> Program:
     assembly: ast.Assembly = Assembler(macros, defines).transform(prepped.tree)
     mcode = [ins.machine_code_str() for ins in assembly.code_segment]
     data = assembly.data_segment
-    return Program(assembly.code_segment, mcode, data)
+    return Program(filepath, assembly.code_segment, mcode, data)

@@ -8,8 +8,8 @@ class Port(QObject):
     input_read = Signal()
     output_written = Signal(int)
 
-    def __init__(self, number: int):
-        super().__init__()
+    def __init__(self, parent: "IOPorts", number: int):
+        super().__init__(parent)
         self.number = number
         self.input: Word = 0
         self.output: Word = 0
@@ -29,9 +29,10 @@ class Port(QObject):
         return self.output
 
 
-class IOPorts:
-    def __init__(self) -> None:
-        self.ports: list[Port] = [Port(n) for n in range(16)]
+class IOPorts(QObject):
+    def __init__(self, parent: QWidget) -> None:
+        super().__init__(parent)
+        self.ports: list[Port] = [Port(self, n) for n in range(16)]
 
     def __getitem__(self, port: int) -> Port:
         if 0 > port or port > 15 :

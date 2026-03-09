@@ -1,8 +1,8 @@
 from random import randint
-from ..io_ports import Port, Slot
+from .io_ports import Port, Slot
 
 
-class RNG:
+class RNGDevice:
     def __init__(self, port: Port):
         self.buffer: str = ""
         self.port: Port = port

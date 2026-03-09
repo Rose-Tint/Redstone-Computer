@@ -1,5 +1,7 @@
-from typing import TypeVar
-from .common import *
+from typing import TypeVar, TypeAlias
+from dataclasses import dataclass
+from .common import Register, Immediate, Label, LabelDecl
+from ..opcode import Opcode
 
 
 Unresolved = TypeVar("Unresolved")

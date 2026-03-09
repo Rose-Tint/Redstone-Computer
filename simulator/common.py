@@ -1,13 +1,24 @@
 from typing import TypeAlias
-import abc
 from assembler import Program
-from PySide6.QtCore import QEvent, QObject
-from PySide6.QtWidgets import QWidget
+from PySide6.QtCore import Qt, QEvent, QObject
+from PySide6.QtWidgets import QWidget, QTableWidgetItem
 
 
 Word: TypeAlias = int
 
 Addr: TypeAlias = int
+
+def empty_cell() -> QTableWidgetItem:
+    return QTableWidgetItem()
+
+def table_cell(value: int) -> QTableWidgetItem:
+    item = QTableWidgetItem(str(value))
+    item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
+    return item
+
+class StepEvent(QEvent):
+    def __init__(self):
+        super().__init__(QEvent.Type.User)
 
 class ResetEvent(QEvent):
     def __init__(self):
@@ -19,9 +30,12 @@ class LoadProgramEvent(QEvent):
         self.program = program
 
 class Reloadable:
-    def __init_subclass__(cls) -> None:
+    def __init_subclass__(cls: type) -> None:
         def event(self, event: QEvent) -> bool:
-            if isinstance(event, ResetEvent):
+            if isinstance(event, StepEvent):
+                self.reset()
+                return True
+            elif isinstance(event, ResetEvent):
                 self.reset()
                 return True
             elif isinstance(event, LoadProgramEvent):
@@ -29,7 +43,7 @@ class Reloadable:
                 return True
             else:
                 return super(self.__class__, self).event(event)
-        if issubclass(cls, QWidget):
+        if issubclass(cls, QObject):
             cls.event = event
 
     def reset(self) -> None:
@@ -41,7 +55,7 @@ class Reloadable:
 class InterpreterError(Exception):
     pass
 
-class UnexpectedEndOfInstrMem(InterpreterError):
+class EndOfInstrMemError(InterpreterError):
     def __init__(self, msg: str = ""):
         super().__init__("Unexpectedly reached end of instruction memory " + msg)
 

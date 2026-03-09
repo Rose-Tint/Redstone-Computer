@@ -2,11 +2,11 @@ from PySide6.QtCore import Qt, Slot, Signal
 from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QLineEdit, QSizePolicy
 from assembler import Program
 from utils import Queue
-from ..common import Reloadable
+from .io_ports import Port
+from .common import Reloadable
 
 
 class Keyboard(QWidget, Reloadable):
-    # TODO: is this up to date?
     ENTER = "\n"
     RESET = "\x18"
     BACKSPACE = "\x08"
@@ -21,14 +21,19 @@ class Keyboard(QWidget, Reloadable):
 
     key_pressed = Signal(str)
 
-    def __init__(self, parent: QWidget):
+    def __init__(self, parent: QWidget, status_p: Port, buffer_p: Port):
         super().__init__(parent)
-        self.buffer: Queue[int] = Queue()
+        self.submitted = False
+        self.queue: Queue[int] = Queue()
+        self.status_port = status_p
+        self.buffer_port = buffer_p
+        self.status_port.input_read.connect(self.update_status)
+        self.buffer_port.input_read.connect(self.pop_buffer)
         self.submitted: bool = False
         self.buttons: dict[str, QPushButton] = {}
-        self.text = QLineEdit(self, maxLength=32, readOnly=True)
+        self.text_widget = QLineEdit(self, maxLength=32, readOnly=True)
         grid = QGridLayout(self)
-        grid.addWidget(self.text, 0, 0, 1, -1)
+        grid.addWidget(self.text_widget, 0, 0, 1, -1)
         def make_row(row: int, keys: str):
             for i, key in enumerate(keys):
                 button = self._make_button(key)
@@ -46,26 +51,45 @@ class Keyboard(QWidget, Reloadable):
         self.resize(60, 40)
         self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
 
+    @Slot()
+    def update_status(self) -> None:
+        status = len(self.queue) | (int(self.submitted) << 7)
+        self.status_port.write_input(status)
+
+    @Slot()
+    def pop_buffer(self) -> None:
+        if self.queue.empty():
+            self.buffer_port.write_input(0)
+        elif (key := self.queue.pop()) is not None:
+            self.buffer_port.write_input(key)
+        self.update_status()
+
     def _make_button(self, key: str) -> QPushButton:
         label: str = ""
+        shortcut = None
         min_width: int = 40
         match key:
             case self.ENTER:
                 label = "Enter"
+                shortcut = Qt.Key.Key_Enter
                 min_width = 60
             case self.RESET:
                 label = "Reset"
+                shortcut = Qt.Key.Key_Escape # maybe not?
                 min_width = 60
             case self.BACKSPACE:
                 label = "Backspace"
+                shortcut = Qt.Key.Key_Backspace
                 min_width = 80
             case self.SPACE:
                 label = "Space"
+                shortcut = Qt.Key.Key_Space
                 min_width = 60
             case _:
                 label = key
+                shortcut = key
         button = QPushButton(label, self, flat=False)
-        button.setShortcut(key)
+        button.setShortcut(shortcut)
         button.setMinimumSize(min_width, 30)
         button.adjustSize()
         button.clicked.connect(self.mk_key_slot(key))
@@ -75,30 +99,29 @@ class Keyboard(QWidget, Reloadable):
     def mk_key_slot(self, key: str) -> Slot:
         @Slot()
         def slot():
-            if len(self.buffer) >= 32:
+            if len(self.queue) >= 32:
                 return
             else:
-                self.key_pressed.emit(key)
                 match key:
                     case self.ENTER:
                         self.submitted = True
                     case self.RESET:
-                        self.buffer.clear()
+                        self.queue.clear()
                     case self.BACKSPACE:
-                        self.buffer.pop()
+                        self.queue.pop()
                     case _:
-                        self.buffer.push(ord(key))
+                        self.queue.push(ord(key))
                 self.update_display()
         return slot
 
     def update_display(self) -> None:
         text = ""
-        for n in reversed(self.buffer.data):
+        for n in reversed(self.queue.data):
             if (ch := chr(n)) not in self.CONTROL_CHARS:
                 text += ch
-        self.text.setText(text)
+        self.text_widget.setText(text)
 
     def reset(self) -> None:
         self.submitted = False
-        self.buffer.clear()
+        self.queue.clear()
         self.update_display()

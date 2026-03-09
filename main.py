@@ -1,7 +1,7 @@
 import sys
 from assembler import Program, assemble
 from schematic import make_schematics
-from simulator import run_simulator
+from simulator import Simulator
 from cmdline import *
 
 
@@ -20,6 +20,6 @@ if __name__ == "__main__":
                 data_strs = [str(d) for d in data]
                 data_file.write("\n".join(data_strs) + "\n")
         if cmd.simulate:
-            run_simulator(cmd.assembly_filepath, program)
+            Simulator().run(program)
         elif cmd.make_schematic is True:
             make_schematics(machine_code, data, cmd)

@@ -1,30 +1,97 @@
-from asyncio import sleep
-from threading import Thread
-from assembler import Program
-from PySide6.QtWidgets import QWidget, QMainWindow, QToolBar
-from PySide6.QtGui import QAction
-from .gui import launch_gui, MainGUI
-from .gui.control import RunState
-from .common import *
+import os
+import sys
+from typing import NoReturn
+from assembler import assemble, Program
+from PySide6.QtCore import Signal, Slot
+from PySide6.QtWidgets import QWidget, QMainWindow, QApplication, QGridLayout, QVBoxLayout
+from PySide6.QtGui import QPixmap
+from .pixel_display import PixelDisplay
+from .keyboard import Keyboard
+from .text_display import TextDisplay
+from .control import ProgramControl
+from .io_ports import IOPorts
+from .alu_flags import FlagsWidget
 from .cpu import CPU
-from .io_ports import *
-from .inputs import *
-from .inputs.pixel_display import *
+from .common import InterpreterError, LoadProgramEvent
 
 
-# class Simulator(QMainWindow):
-#     def __init__(self):
-#         super().__init__()
-#         self.gui = MainGUI()
-#         self.cpu = CPU(self.gui)
-#         self.setCentralWidget(self.gui)
+GUI_APPLICATION: QApplication = QApplication([])
 
-def run_simulator(path: str, program: Program) -> None:
-    gui = MainGUI()
-    cpu = CPU(gui)
-    keyboard = Keyboard(gui.keyboard, cpu.ports[6], cpu.ports[7])
-    text_display = TextDisplay(gui.text_display, cpu.ports[8], cpu.ports[9])
-    pixel_display = PixelDisplay(gui.pixel_display, cpu.ports[1], cpu.ports[2], cpu.ports[3], cpu.ports[4], cpu.ports[5])
-    rng = RNG(cpu.ports[10])
-    gui.load_program(path, program)
-    launch_gui(gui)
+def make_column(parent: QWidget, *items: QWidget) -> QWidget:
+    column = QWidget(parent)
+    layout = QVBoxLayout(column)
+    layout.setDirection(layout.Direction.TopToBottom)
+    for item in items:
+        layout.addWidget(item)
+    column.setLayout(layout)
+    return column
+
+class Simulator(QMainWindow):
+
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("MC CPU Simulator")
+        self.setWindowIcon(QPixmap("simulator/assets/redstone_lamp_on.png"))
+        self.current_program: Program | None = None
+        self.ports = IOPorts(self)
+        self.cpu = CPU(self, self.ports)
+        self.pixel_display = PixelDisplay(self,
+            self.ports[1],
+            self.ports[2],
+            self.ports[3],
+            self.ports[4],
+            self.ports[5]
+            )
+        self.keyboard = Keyboard(self, self.ports[6], self.ports[7])
+        self.program_control = ProgramControl(self)
+        self.text_display = TextDisplay(self, self.ports[8], self.ports[9])
+        self.program_control.step.connect(self.cpu.step)
+        self.cpu.instructions.file_dropped.connect(self.load_program)
+        container = QWidget(self)
+        layout = QGridLayout(container)
+        layout.addWidget(make_column(self,
+            self.program_control,
+            self.cpu.ram,
+            self.cpu.instructions
+            ), 0, 2, -1, 1)
+        layout.addWidget(self.text_display, 0, 0)
+        layout.addWidget(self.pixel_display, 1, 0, -1, 1)
+        layout.addWidget(make_column(self,
+            self.cpu.registers,
+            self.cpu.flags_widget,
+            self.keyboard
+            ), 0, 1, -1, 1)
+        container.setLayout(layout)
+        self.setCentralWidget(container)
+
+    @Slot()
+    def load_program(self, program: str | Program) -> None:
+        if isinstance(program, str):
+            print(f"Loading new program {os.path.basename(program)}")
+            self.current_program = assemble(program)
+        elif self.current_program is None:
+            print(f"Loading new program {os.path.basename(program.filepath)}")
+            self.current_program = program
+        else:
+            print(f"Reloading {os.path.basename(self.current_program.filepath)}")
+            # self.current_program = self.current_program
+        event = LoadProgramEvent(self.current_program)
+        app = GUI_APPLICATION
+        # app = QApplication.instance()
+        # if app is None:
+        #     raise InterpreterError("Application not created yet")
+        app.sendEvent(self.cpu, event)
+        app.sendEvent(self.pixel_display, event)
+        app.sendEvent(self.keyboard, event)
+        app.sendEvent(self.text_display, event)
+
+    def run(self, program: str | Program | None = None) -> NoReturn:
+        print(f"Launching simulator in new window")
+        self.show()
+        if program is not None:
+            program = assemble(program) if isinstance(program, str) else program
+            self.load_program(program)
+        app = QApplication.instance()
+        if app is None:
+            raise InterpreterError("Application not created yet")
+        sys.exit(app.exec())
