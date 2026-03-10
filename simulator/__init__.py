@@ -12,7 +12,8 @@ from .control import ProgramControl
 from .io_ports import IOPorts
 from .alu_flags import FlagsWidget
 from .cpu import CPU
-from .common import InterpreterError, LoadProgramEvent
+from .common import LoadProgramEvent
+from .error import SimulatorError
 
 
 GUI_APPLICATION: QApplication = QApplication([])
@@ -44,7 +45,7 @@ class Simulator(QMainWindow):
         self.keyboard = Keyboard(self, self.ports[6], self.ports[7])
         self.program_control = ProgramControl(self)
         self.text_display = TextDisplay(self, self.ports[8], self.ports[9])
-        self.program_control.step.connect(self.reload_if_finished)
+        self.program_control.step.connect(self.program_control.pause)
         self.program_control.step.connect(self.cpu.step)
         self.program_control.reload_program.connect(self.reload_program)
         self.cpu.instructions.file_dropped.connect(self.load_program)
@@ -66,11 +67,6 @@ class Simulator(QMainWindow):
         self.setCentralWidget(container)
 
     @Slot()
-    def reload_if_finished(self) -> None:
-        if self.cpu.finished:
-            self.reload_program()
-
-    @Slot()
     def reload_program(self) -> None:
         self.load_program(self.current_program)
 
@@ -84,17 +80,20 @@ class Simulator(QMainWindow):
             self.current_program = program
         else:
             print(f"Reloading {os.path.basename(self.current_program.filepath)}")
-            # self.current_program = self.current_program
-        event = LoadProgramEvent(self.current_program)
-        # app = GUI_APPLICATION
-        app = QApplication.instance()
-        if app is None:
-            raise InterpreterError("Application not created yet")
-        app.sendEvent(self.cpu, event)
-        app.sendEvent(self.pixel_display, event)
-        app.sendEvent(self.keyboard, event)
-        app.sendEvent(self.text_display, event)
-        print("Program loaded")
+        try:
+            self.cpu.load_program(self.current_program)
+            self.pixel_display.reset()
+            self.keyboard.reset()
+            self.text_display.reset()
+        except SimulatorError as err:
+            err.set_meta(file=self.current_program.filepath)
+            err.add_note("While loading the program", prepend=True)
+            raise err
+        # event = LoadProgramEvent(self.current_program)
+        # GUI_APPLICATION.postEvent(self.cpu, event)
+        # GUI_APPLICATION.postEvent(self.pixel_display, event)
+        # GUI_APPLICATION.postEvent(self.keyboard, event)
+        # GUI_APPLICATION.postEvent(self.text_display, event)
 
     def run(self, program: str | Program | None = None) -> NoReturn:
         print(f"Launching simulator in new window")
@@ -104,5 +103,5 @@ class Simulator(QMainWindow):
             self.load_program(program)
         app = QApplication.instance()
         if app is None:
-            raise InterpreterError("Application not created yet")
+            raise SimulatorError("Application not created yet")
         sys.exit(app.exec())

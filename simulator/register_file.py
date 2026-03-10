@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy
 from assembler import Program, ast
-from .common import table_cell, Word, Reloadable, InterpreterError, clamp_word, WRITE_COLOR, TableCell
+from .common import Word, Reloadable, clamp_word, WRITE_COLOR, TableCell
+from .error import InvalidRegister
 
 
 class RegisterFile(QTableWidget, Reloadable):
@@ -20,7 +21,7 @@ class RegisterFile(QTableWidget, Reloadable):
         if isinstance(register, ast.Register):
             register = register.value
         if register > 7 or register < 0:
-            raise InterpreterError(f"invalid register {register}")
+            raise InvalidRegister(register)
         elif register == 0:
             return 0
         else:
@@ -32,7 +33,7 @@ class RegisterFile(QTableWidget, Reloadable):
         if register == 0:
             return # writing to $zero does nothing
         elif register > 7 or register < 0:
-            raise InterpreterError(f"invalid register {register}")
+            raise InvalidRegister(register)
         else:
             value = clamp_word(value)
             self.registers[register] = value

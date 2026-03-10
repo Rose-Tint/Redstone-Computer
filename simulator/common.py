@@ -1,7 +1,7 @@
 from typing import TypeAlias
 from assembler import Program
-from PySide6.QtCore import Qt, QEvent, QObject, QPropertyAnimation, QEasingCurve, Property
-from PySide6.QtWidgets import QWidget, QTableWidgetItem, QTableWidget, QGraphicsOpacityEffect, QLabel
+from PySide6.QtCore import Qt, QEvent, QObject
+from PySide6.QtWidgets import QTableWidgetItem, QTableWidget, QLabel
 from PySide6.QtGui import QColor
 
 
@@ -84,18 +84,12 @@ class Reloadable:
     def load_program(self, program: Program) -> None:
         self.reset()
 
-class InterpreterError(Exception):
-    pass
 
-class EndOfInstrMemError(InterpreterError):
-    def __init__(self, msg: str = ""):
-        super().__init__("Unexpectedly reached end of instruction memory " + msg)
-
-def bounds_check(n: Word) -> Word:
-    if -128 > n or n > 255:
-        raise InterpreterError(f"word out of bounds ({n})")
-    else:
-        return n
+# def bounds_check(n: Word) -> Word:
+#     if -128 > n or n > 255:
+#         raise SimulatorError(f"word out of bounds ({n})")
+#     else:
+#         return n
 
 def clamp(min: int, max: int, x: int) -> int:
     if x < min: x = min

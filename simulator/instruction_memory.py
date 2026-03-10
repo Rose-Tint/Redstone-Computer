@@ -3,7 +3,8 @@ from PySide6.QtWidgets import QWidget, QTextEdit
 from PySide6.QtGui import QDragEnterEvent, QDropEvent, QTextDocument, QTextCursor, QTextBlockFormat, QColor
 from assembler import Program, ast
 from utils import Stack
-from .common import Reloadable, Addr, InterpreterError, EndOfInstrMemError
+from .common import Reloadable, Addr
+from .error import EndOfInstrMem, InstrAddrOutOfRange, CallStackOverflow, CallStackEmpty, ProgramTooBig
 
 class InstructionMemory(QTextEdit, Reloadable):
     HIGHLIGHT_BG_COLOR = QColor.fromRgba64(240, 91, 137)
@@ -24,24 +25,24 @@ class InstructionMemory(QTextEdit, Reloadable):
 
     def jump(self, addr: Addr) -> None:
         if addr >= self.MAX_SIZE:
-            raise InterpreterError(f"address {addr} out of {self.MAX_SIZE} range.")
+            raise InstrAddrOutOfRange(addr, self.MAX_SIZE)
         self.pc = addr
 
     def push_cs_and_jump(self, addr: Addr):
         if len(self.call_stack) > 16:
-            raise InterpreterError(f"tried to push address ({addr}) but call stack full")
+            raise CallStackOverflow()
         self.call_stack.push(self.pc)
         self.jump(addr)
 
     def pop_cs_and_jump(self):
         if self.call_stack.empty():
-            raise InterpreterError(f"tried to pop address but call stack empty (currently at addr {self.pc})")
+            raise CallStackEmpty()
         addr = self.call_stack.pop()
         self.jump(addr)
 
     def advance(self) -> ast.Instruction:
         if self.pc >= len(self.instructions):
-            raise EndOfInstrMemError()
+            raise EndOfInstrMem(self.pc)
         ins = self.instructions[self.pc]
         self.pc += 1
         self.highlight(self.pc)
@@ -67,7 +68,7 @@ class InstructionMemory(QTextEdit, Reloadable):
 
     def load_program(self, program: Program) -> None:
         if (size := len(program.code)) > self.MAX_SIZE:
-            raise InterpreterError(f"program too big: {size} (max is {self.MAX_SIZE})")
+            raise ProgramTooBig(size, self.MAX_SIZE)
         self.instructions = program.code
         lines: list[str] = []
         for addr, instruction in enumerate(program.code, 1):

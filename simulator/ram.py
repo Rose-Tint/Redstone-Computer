@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy, QScrollArea, QTableWidgetItem
 from assembler import Program
 from .common import Reloadable, Word, Addr, READ_COLOR, WRITE_COLOR, TableCell
+from .error import InvalidRAMAddress
 
 
 class RAM(QScrollArea, Reloadable):
@@ -28,9 +29,13 @@ class RAM(QScrollArea, Reloadable):
     def read(self, addr: Addr) -> Word:
         # row, column = self.addr_to_2d(addr)
         # cell: TableCell = self.table.cellWidget(row, column) # type: ignore
+        if addr >= self.MAX_SIZE:
+            raise InvalidRAMAddress(addr).add_note(f"Tried to read from address {addr}")
         return self.data[addr]
 
     def write(self, addr: Addr, value: Word, animate: bool = True) -> None:
+        if addr >= self.MAX_SIZE:
+            raise InvalidRAMAddress(addr).add_note(f"Tried to write to address {addr}")
         self.data[addr] = value
         row, column = self.addr_to_2d(addr)
         cell: TableCell = self.table.cellWidget(row, column) # type: ignore
@@ -42,7 +47,7 @@ class RAM(QScrollArea, Reloadable):
             # cell.fade_background(WRITE_COLOR)
 
     def update_ram(self, ram: list[Word]) -> None:
-        assert len(ram) == self.MAX_SIZE, f"ram length: {len(ram)}"
+        # assert len(ram) == self.MAX_SIZE, f"ram length: {len(ram)}"
         for addr, value in enumerate(ram):
             self.write(addr, value, animate=False)
 
@@ -52,5 +57,3 @@ class RAM(QScrollArea, Reloadable):
     def load_program(self, program: Program) -> None:
         data = program.data + [0] * (self.MAX_SIZE - len(program.data))
         self.update_ram(data)
-        # for addr, value in enumerate(program.data):
-        #     self.write(addr, value)

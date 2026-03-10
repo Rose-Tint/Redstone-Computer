@@ -1,4 +1,6 @@
-from PySide6.QtCore import Slot
+from PySide6.QtCore import Slot, QObject
+from PySide6.QtWidgets import QWidget
+from assembler import Program
 from assembler.opcode import Opcode
 from assembler.ast import Instruction, RegEncoded, ImmEncoded, JumpEncoded, SpecEncoded
 from .instruction_memory import InstructionMemory
@@ -6,12 +8,12 @@ from .register_file import RegisterFile
 from .ram import RAM
 from .alu_flags import FlagsWidget, ALUFlags
 from utils import Stack
-from .io_ports import *
+from .common import Word, Reloadable
+from .io_ports import IOPorts
+from .error import SimulatorError, EndOfInstrMem, InvalidInstruction, VarStackOverflow, VarStackEmpty
 
 
 class CPU(QObject, Reloadable):
-    # finished = Signal(bool)
-
     def __init__(self, parent: QWidget, ports: IOPorts) -> None:
         super().__init__(parent)
         self.instructions: InstructionMemory = InstructionMemory(parent)
@@ -23,10 +25,14 @@ class CPU(QObject, Reloadable):
         self.finished: bool = False
 
     def reset(self) -> None:
-        self.instructions.reset()
-        self.registers.reset()
-        self.ram.reset()
-        self.flags_widget.reset()
+        try:
+            self.instructions.reset()
+            self.registers.reset()
+            self.ram.reset()
+            self.flags_widget.reset()
+        except SimulatorError as err:
+            err.add_note("While resetting CPU")
+            raise err
         self.var_stack.clear()
         self.finished = False
 
@@ -43,16 +49,16 @@ class CPU(QObject, Reloadable):
         try:
             instruction = self.instructions.advance()
             self.execute(instruction)
-        except InterpreterError as err:
-            if isinstance(err, EndOfInstrMemError):
-                self.finished = True
-            pc = self.instructions.pc
-            msg = f"Error while executing instruction {pc}"
+        except InvalidInstruction as err:
             if instruction is not None:
-                msg += f" ({repr(instruction)})"
-            print(msg)
-            err.__traceback__ = None
-            raise err
+                err.set_instruction(instruction)
+            raise
+        except EndOfInstrMem:
+            self.finished = True
+            raise
+        except SimulatorError as err:
+            err.set_meta(line=self.instructions.pc)
+            raise
 
     @property
     def alu_flags(self) -> ALUFlags:
@@ -72,7 +78,7 @@ class CPU(QObject, Reloadable):
         elif isinstance(instr, SpecEncoded):
             self.spec_encoded(instr.opcode, instr.rs, instr.port, instr.imm)
         else:
-            raise InterpreterError(f"invalid instruction encoding for {repr(instr)}")
+            raise InvalidInstruction(instr)
 
     def reg_encoded(self, opcode, rs, rt, rd):
         match opcode:
@@ -92,8 +98,6 @@ class CPU(QObject, Reloadable):
                 self.registers.write(rd, self.set_flags(self.registers.read(rs) ^ self.registers.read(rt)))
             case Opcode.NOR:
                 self.registers.write(rd, self.set_flags(~(self.registers.read(rs) | self.registers.read(rt))))
-            case _:
-                raise InterpreterError(f"invalid register-encoded instruction {opcode}")
 
     def imm_encoded(self, opcode, rs, rt, imm):
         match opcode:
@@ -113,8 +117,6 @@ class CPU(QObject, Reloadable):
                 self.registers.write(rt, self.set_flags(self.registers.read(rs) + imm))
             case Opcode.SUBI:
                 self.registers.write(rt, self.set_flags(self.registers.read(rs) - imm))
-            case _:
-                raise InterpreterError(f"invalid immediate-encoded instruction {opcode}")
 
     def jump_encoded(self, opcode, addr):
         match opcode:
@@ -140,8 +142,6 @@ class CPU(QObject, Reloadable):
             case Opcode.BNN:
                 if ALUFlags.Negative not in self.alu_flags:
                     self.instructions.jump(addr)
-            case _:
-                raise InterpreterError(f"invalid jump-encoded instruction {opcode}")
 
     def spec_encoded(self, opcode, rs, port, _imm):
         match opcode:
@@ -153,14 +153,11 @@ class CPU(QObject, Reloadable):
                 self.ports[port].write_output(self.registers.read(rs))
             case Opcode.PUSH:
                 if len(self.var_stack) > 16:
-                    raise InterpreterError("tried to push to var stack while stack full")
+                    raise VarStackOverflow()
                 self.var_stack.push(self.registers.read(rs))
             case Opcode.POP:
                 if len(self.var_stack) <= 0:
-                    raise InterpreterError("tried to push to var stack while stack full")
+                    raise VarStackEmpty()
                 self.registers.write(rs, self.var_stack.pop())
             case Opcode.EXIT:
                 self.finished = True
-                print("Program finished")
-            case _:
-                raise InterpreterError(f"invalid special-encoded instruction {opcode}")

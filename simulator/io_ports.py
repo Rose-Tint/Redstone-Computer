@@ -1,5 +1,7 @@
 from PySide6.QtCore import QObject, Signal, Slot
-from .common import *
+from PySide6.QtWidgets import QWidget
+from .common import Word, clamp_word
+from .error import InvalidPort
 
 
 # class IODevice(abc.ABC): pass
@@ -15,14 +17,14 @@ class Port(QObject):
         self.output: Word = 0
 
     def write_input(self, value: Word) -> None:
-        self.input = bounds_check(value)
+        self.input = clamp_word(value)
 
     def read_input(self) -> Word:
         self.input_read.emit()
         return self.input
 
     def write_output(self, value: Word) -> None:
-        self.output = bounds_check(value)
+        self.output = clamp_word(value)
         self.output_written.emit(value)
 
     def read_output(self) -> Word:
@@ -36,6 +38,6 @@ class IOPorts(QObject):
 
     def __getitem__(self, port: int) -> Port:
         if 0 > port or port > 15 :
-            raise InterpreterError(f"invalid port {port}")
+            raise InvalidPort(port)
         else:
             return self.ports[port]
