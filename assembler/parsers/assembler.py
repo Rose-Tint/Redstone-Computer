@@ -127,8 +127,10 @@ class Assembler(Transformer):
             return ast.ImmEncoded(opcode, rs, rt, 0)
 
     def one_reg_imm(self, opcode: Opcode, rt, imm) -> ast.Instruction:
-        if opcode is Opcode.LI or opcode is Opcode.CMPI:
+        if opcode is Opcode.LI:
             return ast.ImmEncoded(opcode, ast.Zero, rt, imm)
+        elif opcode is Opcode.CMPI:
+            return ast.ImmEncoded(opcode, rt, ast.Zero, imm)
         else: # opcode is Opcode.RP or opcode is Opcode.WP
             return ast.SpecEncoded(opcode, rt, imm)
 
