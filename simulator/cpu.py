@@ -126,19 +126,19 @@ class CPU(QObject, Reloadable):
                 if ALUFlags.Zero in self.alu_flags:
                     self.instructions.jump(addr)
             case Opcode.BNZ:
-                if ALUFlags.Zero in self.alu_flags:
+                if ALUFlags.Zero not in self.alu_flags:
                     self.instructions.jump(addr)
             case Opcode.BRO:
                 if ALUFlags.Overflow in self.alu_flags:
                     self.instructions.jump(addr)
             case Opcode.BNO:
-                if ALUFlags.Overflow in self.alu_flags:
+                if ALUFlags.Overflow not in self.alu_flags:
                     self.instructions.jump(addr)
             case Opcode.BRN:
                 if ALUFlags.Negative in self.alu_flags:
                     self.instructions.jump(addr)
             case Opcode.BNN:
-                if ALUFlags.Negative in self.alu_flags:
+                if ALUFlags.Negative not in self.alu_flags:
                     self.instructions.jump(addr)
             case _:
                 raise InterpreterError(f"invalid jump-encoded instruction {opcode}")

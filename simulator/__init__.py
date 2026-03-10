@@ -27,7 +27,6 @@ def make_column(parent: QWidget, *items: QWidget) -> QWidget:
     return column
 
 class Simulator(QMainWindow):
-
     def __init__(self):
         super().__init__()
         self.setWindowTitle("MC CPU Simulator")
@@ -45,7 +44,9 @@ class Simulator(QMainWindow):
         self.keyboard = Keyboard(self, self.ports[6], self.ports[7])
         self.program_control = ProgramControl(self)
         self.text_display = TextDisplay(self, self.ports[8], self.ports[9])
+        self.program_control.step.connect(self.reload_if_finished)
         self.program_control.step.connect(self.cpu.step)
+        self.program_control.reload_program.connect(self.reload_program)
         self.cpu.instructions.file_dropped.connect(self.load_program)
         container = QWidget(self)
         layout = QGridLayout(container)
@@ -65,6 +66,15 @@ class Simulator(QMainWindow):
         self.setCentralWidget(container)
 
     @Slot()
+    def reload_if_finished(self) -> None:
+        if self.cpu.finished:
+            self.reload_program()
+
+    @Slot()
+    def reload_program(self) -> None:
+        self.load_program(self.current_program)
+
+    @Slot()
     def load_program(self, program: str | Program) -> None:
         if isinstance(program, str):
             print(f"Loading new program {os.path.basename(program)}")
@@ -76,14 +86,15 @@ class Simulator(QMainWindow):
             print(f"Reloading {os.path.basename(self.current_program.filepath)}")
             # self.current_program = self.current_program
         event = LoadProgramEvent(self.current_program)
-        app = GUI_APPLICATION
-        # app = QApplication.instance()
-        # if app is None:
-        #     raise InterpreterError("Application not created yet")
+        # app = GUI_APPLICATION
+        app = QApplication.instance()
+        if app is None:
+            raise InterpreterError("Application not created yet")
         app.sendEvent(self.cpu, event)
         app.sendEvent(self.pixel_display, event)
         app.sendEvent(self.keyboard, event)
         app.sendEvent(self.text_display, event)
+        print("Program loaded")
 
     def run(self, program: str | Program | None = None) -> NoReturn:
         print(f"Launching simulator in new window")

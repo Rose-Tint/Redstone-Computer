@@ -59,6 +59,8 @@ class InstructionMemory(QTextEdit, Reloadable):
         format.setBackground(self.HIGHLIGHT_BG_COLOR)
         cursor.setBlockFormat(format)
         cursor.endEditBlock()
+        self.setTextCursor(cursor)
+        self.ensureCursorVisible()
 
     def reset(self) -> None:
         self.document().setPlainText("")

@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy, QScrollArea, QTableWidgetItem
 from assembler import Program
-from .common import Reloadable, Word, Addr, table_cell
+from .common import Reloadable, Word, Addr, READ_COLOR, WRITE_COLOR, TableCell
 
 
 class RAM(QScrollArea, Reloadable):
@@ -10,35 +10,41 @@ class RAM(QScrollArea, Reloadable):
         super().__init__(parent)
         self.data: list[Word] = [0] * self.MAX_SIZE
         self.table = QTableWidget(self.MAX_SIZE // 4, 4, self)
-        # hheader = self.table.horizontalHeader()
-        # hheader.setSectionResizeMode(hheader.ResizeMode.Stretch)
-        # vheader = self.table.verticalHeader()
-        # vheader.setSectionResizeMode(hheader.ResizeMode.Stretch)
-        self.table.setVerticalHeaderLabels(
-            [f"{i} - {i+3}" for i in range(0, self.MAX_SIZE, 4)]
-            )
-        self.reset()
+        for addr in range(self.MAX_SIZE):
+            row, col = self.addr_to_2d(addr)
+            self.table.setCellWidget(row, col, TableCell(self.table, 0))
+        self.table.setVerticalHeaderLabels([f"{i} - {i+3}" for i in range(0, self.MAX_SIZE, 4)])
         self.table.resizeColumnsToContents()
         self.table.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         self.table.adjustSize()
         self.setWidget(self.table)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
+    @staticmethod
+    def addr_to_2d(addr: Addr) -> tuple[int, int]:
+        row, column = addr // 4, addr % 4
+        return (row, column)
+
     def read(self, addr: Addr) -> Word:
+        # row, column = self.addr_to_2d(addr)
+        # cell: TableCell = self.table.cellWidget(row, column) # type: ignore
         return self.data[addr]
 
-    def write(self, addr: Addr, value: Word) -> None:
+    def write(self, addr: Addr, value: Word, animate: bool = True) -> None:
         self.data[addr] = value
-        row = addr // 4
-        column = addr % 4
-        cell = table_cell(value)
-        cell.setToolTip(f"Address: {addr}")
-        self.table.setItem(row, column, cell)
+        row, column = self.addr_to_2d(addr)
+        cell: TableCell = self.table.cellWidget(row, column) # type: ignore
+        cell.value = value
+        # cell = TableCell(self.table, value)
+        # cell.setToolTip(f"Address: {addr}")
+        # self.table.setCellWidget(row, column, cell)
+        # if animate:
+            # cell.fade_background(WRITE_COLOR)
 
     def update_ram(self, ram: list[Word]) -> None:
         assert len(ram) == self.MAX_SIZE, f"ram length: {len(ram)}"
         for addr, value in enumerate(ram):
-            self.write(addr, value)
+            self.write(addr, value, animate=False)
 
     def reset(self) -> None:
         self.update_ram([0] * self.MAX_SIZE)

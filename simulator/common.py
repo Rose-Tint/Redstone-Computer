@@ -1,7 +1,8 @@
 from typing import TypeAlias
 from assembler import Program
-from PySide6.QtCore import Qt, QEvent, QObject
-from PySide6.QtWidgets import QWidget, QTableWidgetItem
+from PySide6.QtCore import Qt, QEvent, QObject, QPropertyAnimation, QEasingCurve, Property
+from PySide6.QtWidgets import QWidget, QTableWidgetItem, QTableWidget, QGraphicsOpacityEffect, QLabel
+from PySide6.QtGui import QColor
 
 
 Word: TypeAlias = int
@@ -15,6 +16,37 @@ def table_cell(value: int) -> QTableWidgetItem:
     item = QTableWidgetItem(str(value))
     item.setFlags(item.flags() ^ Qt.ItemFlag.ItemIsEditable)
     return item
+
+class TableCell(QLabel):
+    def __init__(self, parent: QTableWidget, value):
+        super().__init__(str(value), parent)
+        self._value = value
+        self._bg_color: QColor = self.base_background
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value) -> None:
+        self.setText(str(value))
+        self._value = value
+
+    @property
+    def base_background(self) -> QColor:
+        return self.palette().alternateBase().color()
+
+    def set_background(self, value: QColor) -> None:
+        self._bg_color = value
+        style = f"background-color: #{self._bg_color.rgb():x}"
+        print(f"DEBUG: {style}")
+        self.setStyleSheet(style)
+
+    def reset_background(self) -> None:
+        self.set_background(self.base_background)
+
+READ_COLOR: QColor = QColor.fromString("#0000cd")
+WRITE_COLOR: QColor = QColor.fromString("#32cd32")
 
 class StepEvent(QEvent):
     def __init__(self):

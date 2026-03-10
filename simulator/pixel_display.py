@@ -90,7 +90,7 @@ class PixelDisplay(QWidget, Reloadable):
 
     def draw_pixel(self, x: int, y: int) -> None:
         if x > self.MAX_WIDTH or y > self.MAX_HEIGHT:
-            raise IndexError(f"Error: coordinates ({x}, {y}) out of range")
+            raise IndexError(f"coordinates ({x}, {y}) out of range")
         self.pixels[x][y].on()
 
     def draw_square(self, x1: int, y1: int, x2: int, y2: int) -> None:

@@ -1,7 +1,7 @@
 import enum
 from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy
 from assembler import Program
-from .common import table_cell, Reloadable
+from .common import table_cell, Reloadable, TableCell
 
 
 class ALUFlags(enum.IntFlag):
@@ -13,12 +13,18 @@ class ALUFlags(enum.IntFlag):
     def Empty(cls) -> "ALUFlags":
         return ALUFlags(0)
 
+    def __repr__(self) -> str:
+        return f"[oflow: {ALUFlags.Overflow in self}, zero: {ALUFlags.Zero in self}, neg: {ALUFlags.Negative in self}]"
+
     @classmethod
-    def cmp(cls, value: int):
+    def cmp(cls, value: int) -> "ALUFlags":
         flags = cls.Empty()
-        flags.set_negative(value < 0)
-        flags.set_overflow(value > 255)
-        flags.set_zero(value == 0)
+        if value > 0:
+            flags |= ALUFlags.Overflow
+        if value < 0:
+            flags |= ALUFlags.Negative
+        if value == 0:
+            flags |= ALUFlags.Zero
         return flags
 
     def set_overflow(self, to: bool) -> None:
@@ -55,9 +61,9 @@ class FlagsWidget(QTableWidget, Reloadable):
 
     @alu_flags.setter
     def alu_flags(self, flags: ALUFlags) -> None:
-        self.setItem(0, 0, table_cell(int(ALUFlags.Overflow in flags)))
-        self.setItem(0, 1, table_cell(int(ALUFlags.Zero in flags)))
-        self.setItem(0, 2, table_cell(int(ALUFlags.Negative in flags)))
+        self.setCellWidget(0, 0, TableCell(self, int(ALUFlags.Overflow in flags)))
+        self.setCellWidget(0, 1, TableCell(self, int(ALUFlags.Zero in flags)))
+        self.setCellWidget(0, 2, TableCell(self, int(ALUFlags.Negative in flags)))
         self._alu_flags = flags
 
     def reset(self) -> None:
