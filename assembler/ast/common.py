@@ -18,13 +18,18 @@ class Register:
     value: int
 
     def __init__(self, name: str):
-        self.value = Register._register_dict[name]
+        self.value = self._register_dict[name]
 
     def __lshift__(self, n: int) -> int:
         return self.value << n
 
     def __repr__(self) -> str:
         return str(list(self._register_dict.keys())[self.value])
+
+    @classmethod
+    def from_int(cls, n: int) -> "Register":
+        assert 0 <= n <= 7
+        return cls(list(cls._register_dict.keys())[n])
 
     _register_dict = {
         "$zero": 0,
