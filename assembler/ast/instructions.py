@@ -1,7 +1,7 @@
 from typing import TypeVar, TypeAlias
 from dataclasses import dataclass
 from .common import Register, Immediate, Label, LabelDecl, Define
-from .meta import Meta
+from .meta import Meta, HasMeta
 from ..opcode import Opcode
 
 
@@ -11,12 +11,12 @@ Immediate_T: TypeAlias = Immediate | Unresolved
 Label_T: TypeAlias = Label | Unresolved
 
 @dataclass(init=False)
-class Instruction:
-    meta: Meta
+class Instruction(HasMeta):
+    _meta: Meta
     opcode: Opcode
 
     def __init__(self, meta: Meta, opcode: str):
-        self.meta = meta
+        self._meta = meta
         self.opcode: Opcode = Opcode.get(opcode)
 
     def assert_symbol_resolved(self, value, *exp_types: type):
@@ -37,6 +37,10 @@ class Instruction:
     def machine_code_str(self) -> str:
         code = self.machine_code()
         return bin(code)[2:].rjust(16, '0')
+
+    @property
+    def meta(self) -> Meta:
+        return self._meta
 
 @dataclass
 class RegEncoded(Instruction):

@@ -8,13 +8,13 @@ class SimulatorError(Exception):
         super().__init__()
         self.title: str = title
         self.title_msg: str | None = msg
+        self.meta: ast.Meta = ast.Meta()
         self.file: str | None = None
         self.line: int | None = None
         self._notes: list[str] = []
 
-    def set_meta(self, file: str|None=None, line: int|None=None) -> None:
-        self.file = file or self.file
-        self.line = line or self.line
+    def set_meta(self, meta: ast.Meta) -> None:
+        self.meta = meta
 
     def add_note(self, msg: str, prepend: bool = False):
         if prepend:

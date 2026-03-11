@@ -1,7 +1,7 @@
 import os
 import sys
 from typing import NoReturn
-from assembler import assemble, Program
+from assembler import assemble, Program, ast
 from PySide6.QtCore import Signal, Slot
 from PySide6.QtWidgets import QWidget, QMainWindow, QApplication, QGridLayout, QVBoxLayout
 from PySide6.QtGui import QPixmap
@@ -10,9 +10,7 @@ from .keyboard import Keyboard
 from .text_display import TextDisplay
 from .control import ProgramControl
 from .io_ports import IOPorts
-from .alu_flags import FlagsWidget
 from .cpu import CPU
-from .common import LoadProgramEvent
 from .error import SimulatorError
 
 
@@ -32,6 +30,7 @@ class Simulator(QMainWindow):
         super().__init__()
         self.setWindowTitle("MC CPU Simulator")
         self.setWindowIcon(QPixmap("simulator/assets/redstone_lamp_on.png"))
+        self.current_meta = ast.Meta()
         self.current_program: Program | None = None
         self.ports = IOPorts(self)
         self.cpu = CPU(self, self.ports)
@@ -49,6 +48,7 @@ class Simulator(QMainWindow):
         self.program_control.step.connect(self.cpu.step)
         self.program_control.reload_program.connect(self.reload_program)
         self.cpu.instructions.file_dropped.connect(self.load_program)
+        self.cpu.meta_update.connect(self.update_meta)
         container = QWidget(self)
         layout = QGridLayout(container)
         layout.addWidget(make_column(self,
@@ -65,6 +65,17 @@ class Simulator(QMainWindow):
             ), 0, 1, -1, 1)
         container.setLayout(layout)
         self.setCentralWidget(container)
+
+    @Slot()
+    def update_meta(self, meta: ast.Meta) -> None:
+        self.current_meta = meta
+
+    @Slot()
+    def step(self) -> None:
+        try:
+            self.cpu.step()
+        except SimulatorError as err:
+            err.set_meta(self.current_meta)
 
     @Slot()
     def reload_program(self) -> None:
@@ -86,7 +97,7 @@ class Simulator(QMainWindow):
             self.keyboard.reset()
             self.text_display.reset()
         except SimulatorError as err:
-            err.set_meta(file=self.current_program.filepath)
+            err.set_meta(self.current_meta)
             err.add_note("While loading the program", prepend=True)
             raise err
         # event = LoadProgramEvent(self.current_program)

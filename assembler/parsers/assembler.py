@@ -38,7 +38,7 @@ class Assembler(Transformer):
                 print(f"DEBUG: skipping data {data}")
 
     def data_def(self, label: ast.Label, data: ast.Data) -> ast.DataDef:
-        return ast.DataDef(label.meta, label, data)
+        return ast.DataDef(label._meta, label, data)
 
     def align_data(self, n) -> ast.Align:
         return ast.Align(n)
@@ -94,11 +94,11 @@ class Assembler(Transformer):
         return stmt
 
     def macro_def(self, name: ast.Label, params, *body):
-        self.macros[str(name)] = ast.Macro(name.meta, name.name, params, [*body])
+        self.macros[str(name)] = ast.Macro(name._meta, name.name, params, [*body])
         return Discard
 
     def macro_call(self, name: ast.Label, *args) -> ast.MacroCall:
-        return ast.MacroCall(name.meta, name.name, [*args])
+        return ast.MacroCall(name._meta, name.name, [*args])
 
     def line(self, value, *_args):
         return value

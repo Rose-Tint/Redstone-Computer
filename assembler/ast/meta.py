@@ -1,4 +1,5 @@
 from typing import Generic
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import lark
 from utils import T
@@ -34,6 +35,17 @@ class Meta:
 class Located(Generic[T]):
     meta: Meta
     data: T
+
+class HasMeta(ABC):
+    @property
+    @abstractmethod
+    def meta(self) -> Meta:
+        if hasattr(self, "meta"):
+            return getattr(self, "meta")
+        elif hasattr(self, "_meta"):
+            return getattr(self, "_meta")
+        else:
+            raise NotImplemented
 
 # @dataclass
 # class HasMeta:

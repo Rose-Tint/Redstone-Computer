@@ -1,6 +1,6 @@
-from PySide6.QtCore import Slot, QObject
+from PySide6.QtCore import Slot, QObject, Signal
 from PySide6.QtWidgets import QWidget
-from assembler import Program
+from assembler import Program, ast
 from assembler.opcode import Opcode
 from assembler.ast import Instruction, RegEncoded, ImmEncoded, JumpEncoded, SpecEncoded
 from .instruction_memory import InstructionMemory
@@ -14,6 +14,8 @@ from .error import SimulatorError, EndOfInstrMem, InvalidInstruction, VarStackOv
 
 
 class CPU(QObject, Reloadable):
+    meta_update = Signal(ast.Meta)
+
     def __init__(self, parent: QWidget, ports: IOPorts) -> None:
         super().__init__(parent)
         self.instructions: InstructionMemory = InstructionMemory(parent)
@@ -41,13 +43,13 @@ class CPU(QObject, Reloadable):
         self.instructions.load_program(program)
         self.ram.load_program(program)
 
-    @Slot()
     def step(self) -> None:
         if self.finished:
             return
         instruction = None
         try:
             instruction = self.instructions.advance()
+            self.meta_update.emit(instruction.meta)
             self.execute(instruction)
         except InvalidInstruction as err:
             if instruction is not None:
@@ -55,9 +57,6 @@ class CPU(QObject, Reloadable):
             raise
         except EndOfInstrMem:
             self.finished = True
-            raise
-        except SimulatorError as err:
-            err.set_meta(line=self.instructions.pc)
             raise
 
     @property

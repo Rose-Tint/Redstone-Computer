@@ -1,14 +1,13 @@
 from dataclasses import dataclass
-from types import UnionType
 from typing import Any, TypeAlias
-from .meta import Meta
+from .meta import Meta, HasMeta
 
 
 # Addr: TypeAlias = int
 
 class Label:
     def __init__(self, meta: Meta, name: str, value: int | None = None):
-        self.meta = meta
+        self._meta = meta
         self.name = name
         self.value = value
 
@@ -34,12 +33,16 @@ class Label:
         else:
             return self.name == other
 
+    @property
+    def get_meta(self) -> Meta:
+        return self._meta
+
     def is_resolved(self) -> bool:
         return self.value is not None
 
-class Define:
+class Define(HasMeta):
     def __init__(self, meta: Meta, name: str, value: int):
-        self.meta: Meta = meta
+        self._meta: Meta = meta
         self.name: str = name
         self.value: int = value
 
@@ -70,6 +73,10 @@ class Define:
         else:
             return self.name == other
 
+    @property
+    def meta(self) -> Meta:
+        return self._meta
+
 # class WordImmediate:
 #     def __init__(self, meta: Meta, value: int = 0):
 #         self.value = value
@@ -80,14 +87,14 @@ class Define:
 
 Immediate: TypeAlias = int | Label | Define
 
-@dataclass(init=False)
-class Register:
-    meta: Meta
-    id: int
+# @dataclass(init=False)
+class Register(HasMeta):
+    # _meta: Meta
+    # id: int
 
     def __init__(self, name: str, meta: Meta):
         self.id = self._register_dict[name]
-        self.meta = meta
+        self._meta = meta
 
     def __int__(self) -> int:
         return self.id
@@ -114,13 +121,21 @@ class Register:
         "$r7": 7,
     }
 
+    @property
+    def meta(self) -> Meta:
+        return self._meta
+
 Zero = Register("$zero", Meta())
 
 InstrArg: TypeAlias = Register | Immediate
 
 @dataclass
-class LabelDecl:
+class LabelDecl(HasMeta):
     label: Label
 
     def __hash__(self) -> int:
         return hash(self.label)
+
+    @property
+    def meta(self) -> Meta:
+        return self.label.get_meta

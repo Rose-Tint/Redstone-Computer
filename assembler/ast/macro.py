@@ -1,11 +1,13 @@
-from lark import Transformer
-from .common import *
-from .instructions import *
+from typing import TypeAlias
+from dataclasses import dataclass
+from .common import InstrArg, LabelDecl, Immediate, Register, Label
+from .meta import Meta, HasMeta
+from .instructions import Instruction, RegEncoded, ImmEncoded, JumpEncoded, SpecEncoded, CodeSegment
 
 
-class MacroParam:
+class MacroParam(HasMeta):
     def __init__(self, meta: Meta, name: str):
-        self.meta: Meta = meta
+        self._meta: Meta = meta
         self.name: str = name
 
     def __str__(self) -> str:
@@ -23,26 +25,38 @@ class MacroParam:
         else:
             return self.name == other
 
+    @property
+    def meta(self) -> Meta:
+        return self._meta
+
 _MacroInstrArg: TypeAlias = Register | Immediate | MacroParam
 
 MacroStatement: TypeAlias = LabelDecl | Instruction
 
 @dataclass
-class Macro:
-    meta: Meta
+class Macro(HasMeta):
+    _meta: Meta
     name: str
     params: list[MacroParam]
     body: list[MacroStatement]
     instance: int = 0
 
     def generate_label(self, name: Label) -> Label:
-        return Label(name.meta, f"{name}_LOCAL_{self.instance}")
+        return Label(name._meta, f"{name}_LOCAL_{self.instance}")
+
+    @property
+    def meta(self) -> Meta:
+        return self._meta
 
 @dataclass
-class MacroCall:
-    meta: Meta
+class MacroCall(HasMeta):
+    _meta: Meta
     name: str
     args: list[Register | Immediate]
+
+    @property
+    def meta(self) -> Meta:
+        return self._meta
 
 class MacroCallArgs:
     def __init__(self, name: str, params: list[MacroParam], args: list[InstrArg]):
