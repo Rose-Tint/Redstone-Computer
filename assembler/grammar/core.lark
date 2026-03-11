@@ -3,7 +3,7 @@
 
 label_decl      : LABEL ":"
 
-?immediate      : DEFINE    -> define
+?immediate      : DEFINE
                 | LABEL     -> named_imm
                 | INT
                 | CHAR

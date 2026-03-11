@@ -3,7 +3,25 @@ from .common import *
 from .instructions import *
 
 
-class MacroParam(str): pass
+class MacroParam:
+    def __init__(self, meta: Meta, name: str):
+        self.meta: Meta = meta
+        self.name: str = name
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return self.name
+
+    def __hash__(self) -> int:
+        return str.__hash__(self.name)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, MacroParam):
+            return self.name == other.name
+        else:
+            return self.name == other
 
 _MacroInstrArg: TypeAlias = Register | Immediate | MacroParam
 
@@ -11,23 +29,25 @@ MacroStatement: TypeAlias = LabelDecl | Instruction
 
 @dataclass
 class Macro:
+    meta: Meta
     name: str
     params: list[MacroParam]
     body: list[MacroStatement]
     instance: int = 0
 
     def generate_label(self, name: Label) -> Label:
-        return Label(f"{name}_LOCAL_{self.instance}")
+        return Label(name.meta, f"{name}_LOCAL_{self.instance}")
 
 @dataclass
 class MacroCall:
+    meta: Meta
     name: str
     args: list[Register | Immediate]
 
 class MacroCallArgs:
     def __init__(self, name: str, params: list[MacroParam], args: list[InstrArg]):
         if len(params) != len(args):
-            params_str = ", ".join(params)
+            params_str = ", ".join(map(str, params))
             raise ValueError(
                 f"Parse error: incorrect argument amount for {name} {params_str}\
                 \texpected {len(params)}, got {len(args)}"
@@ -41,19 +61,12 @@ class MacroCallArgs:
             return arg
 
 def expand_macro(macro: Macro, call: MacroCall) -> CodeSegment:
-    # print(f"DEBUG: expanding macro {repr(macro.name)}")
     body: CodeSegment = []
     argdict = MacroCallArgs(macro.name, macro.params, call.args)
-    # print(f"DEBUG:   argdict:")
-    # for param, arg in argdict.data.items():
-    #     print(f"DEBUG:     {param} -> {repr(arg)}")
-    # print(f"DEBUG:   statements:")
     for stmt in macro.body:
         if isinstance(stmt, LabelDecl):
-            new_label = macro.generate_label(stmt.label)
-            body.append(LabelDecl(new_label))
+            stmt.label = macro.generate_label(stmt.label)
         elif isinstance(stmt, Instruction):
-            # print(f"DEBUG:     {repr(stmt)}", end="")
             if isinstance(stmt, RegEncoded):
                 stmt.rs = argdict[stmt.rs]
                 stmt.rt = argdict[stmt.rt]
@@ -71,29 +84,7 @@ def expand_macro(macro: Macro, call: MacroCall) -> CodeSegment:
                 stmt.imm = argdict[stmt.imm]
             else:
                 raise ValueError(f"invalid instruction in macro {repr(call)}")
-            body.append(stmt)
-            # print(f" -> {repr(stmt)}")
         else:
             raise ValueError(f"invalid statement in macro {repr(call)}")
+        body.append(stmt)
     return body
-
-
-
-
-
-
-
-
-
-
-
-# MacroArg: TypeAlias = Union[Register, int]
-
-# @dataclass
-# class Macro:
-#     params: list[str]
-#     body: list[Instruction]
-#     instance: int
-
-#     def generate(self, args: list[MacroArg]):
-#         pass

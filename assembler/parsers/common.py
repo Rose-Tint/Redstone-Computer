@@ -4,11 +4,13 @@ from lark.exceptions import UnexpectedInput, UnexpectedToken, UnexpectedEOF
 
 
 _GRAMMAR_PATH = "assembler/grammar/program.lark"
+
 _parser = Lark.open(
     _GRAMMAR_PATH,
     start="program",
     import_paths=["assembler/grammar"],
-    source_path="assembler/grammar"
+    source_path="assembler/grammar",
+    # postlex=
     )
 
 # class ParseError(lark.ParseError): pass

@@ -1,20 +1,19 @@
 from dataclasses import dataclass
-from lark import v_args, Discard, Tree
+from lark import v_args, Discard, Tree, Token
 from .common import Transformer, discard
 from .. import ast
+from ..ast import Meta
 
 @dataclass
 class Preprocessed:
     tree: Tree
-    defines: dict[ast.Define, int]
-    macros: dict[str, ast.Macro]
+    defines: dict[str, ast.Define]
 
 @v_args(inline=True)
 class Preprocessor(Transformer):
-    def __init__(self, path: str) -> None:
+    def __init__(self) -> None:
         super().__init__(visit_tokens=True)
-        self.defines: dict = {}
-        self.macros: dict = {}
+        self.defines: dict[str, ast.Define] = {}
 
     @v_args(tree=True)
     def program(self, tree: Tree) -> Preprocessed:
@@ -35,14 +34,17 @@ class Preprocessor(Transformer):
                 tree.children.remove(child)
                 tree.children.insert(0, child)
             i += 1
-        return Preprocessed(tree, self.defines, self.macros)
+        return Preprocessed(tree, self.defines)
 
-    def definition(self, name, value):
-        self.defines[name] = value
+    def definition(self, name: Token, value: int):
+        meta = Meta.from_token(name)
+        define = ast.Define(meta, str(name), value)
+        self.defines[name] = define
         return Discard
 
-    def MACRO_PARAM(self, *toks) -> ast.MacroParam:
-        return ast.MacroParam("".join(toks))
+    def MACRO_PARAM(self, *toks: Token) -> ast.MacroParam:
+        meta = Meta.from_token(toks[0])
+        return ast.MacroParam(meta, "".join(toks))
 
     def STRING(self, s) -> str:
         return s.strip('"')

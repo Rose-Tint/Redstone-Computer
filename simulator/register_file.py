@@ -19,7 +19,7 @@ class RegisterFile(QTableWidget, Reloadable):
 
     def read(self, register: ast.Register | int) -> Word:
         if isinstance(register, ast.Register):
-            register = register.value
+            register = register.id
         if register > 7 or register < 0:
             raise InvalidRegister(register)
         elif register == 0:
@@ -29,7 +29,7 @@ class RegisterFile(QTableWidget, Reloadable):
 
     def write(self, register: ast.Register | int, value: Word, animate: bool = True) -> None:
         if isinstance(register, ast.Register):
-            register = register.value
+            register = register.id
         if register == 0:
             return # writing to $zero does nothing
         elif register > 7 or register < 0:

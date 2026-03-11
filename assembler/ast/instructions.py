@@ -1,6 +1,7 @@
 from typing import TypeVar, TypeAlias
 from dataclasses import dataclass
-from .common import Register, Immediate, Label, LabelDecl
+from .common import Register, Immediate, Label, LabelDecl, Define
+from .meta import Meta
 from ..opcode import Opcode
 
 
@@ -11,9 +12,11 @@ Label_T: TypeAlias = Label | Unresolved
 
 @dataclass(init=False)
 class Instruction:
+    meta: Meta
     opcode: Opcode
 
-    def __init__(self, opcode: str):
+    def __init__(self, meta: Meta, opcode: str):
+        self.meta = meta
         self.opcode: Opcode = Opcode.get(opcode)
 
     def assert_symbol_resolved(self, value, *exp_types: type):
@@ -67,7 +70,7 @@ class ImmEncoded(Instruction):
         super().assert_resolved()
         self.assert_symbol_resolved(self.rs, Register, int)
         self.assert_symbol_resolved(self.rt, Register, int)
-        self.assert_symbol_resolved(self.imm, int)
+        self.assert_symbol_resolved(self.imm, int, Define)
 
     def __repr__(self) -> str:
         if self.opcode is Opcode.LI or self.opcode is Opcode.CMPI:
@@ -110,8 +113,12 @@ class SpecEncoded(Instruction):
     def assert_resolved(self):
         super().assert_resolved()
         self.assert_symbol_resolved(self.rs, Register, int)
-        self.assert_symbol_resolved(self.port, int)
-        self.assert_symbol_resolved(self.imm, int)
+        self.assert_symbol_resolved(self.port, int, Define)
+        self.assert_symbol_resolved(self.imm, int, Label, Define)
+        if isinstance(self.imm, Label) and not self.imm.is_resolved():
+            raise ValueError(
+                f"Unresolved symbol {self.imm} (type: {type(self.imm)}) in {repr(self)}"
+            )
 
     def __repr__(self) -> str:
         if self.opcode is Opcode.RETURN or self.opcode is Opcode.EXIT:
@@ -133,4 +140,4 @@ CodeStatement: TypeAlias = LabelDecl | Instruction
 
 CodeSegment: TypeAlias = list[CodeStatement]
 
-NOOP = RegEncoded(Opcode.NOOP, 0, 0 ,0)
+NOOP = RegEncoded(Meta(), Opcode.NOOP, 0, 0 ,0)
