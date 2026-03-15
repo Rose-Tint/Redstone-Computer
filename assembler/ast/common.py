@@ -3,13 +3,13 @@ from typing import Any, TypeAlias
 from .meta import Meta, HasMeta
 
 
-# Addr: TypeAlias = int
+Addr: TypeAlias = int
 
-class Label:
-    def __init__(self, meta: Meta, name: str, value: int | None = None):
-        self._meta = meta
-        self.name = name
-        self.value = value
+@dataclass
+class Label(HasMeta):
+    _meta: Meta
+    name: str
+    value: int | None = None
 
     def __str__(self) -> str:
         return self.name
@@ -34,17 +34,17 @@ class Label:
             return self.name == other
 
     @property
-    def get_meta(self) -> Meta:
+    def meta(self) -> Meta:
         return self._meta
 
     def is_resolved(self) -> bool:
         return self.value is not None
 
+@dataclass
 class Define(HasMeta):
-    def __init__(self, meta: Meta, name: str, value: int):
-        self._meta: Meta = meta
-        self.name: str = name
-        self.value: int = value
+    _meta: Meta
+    name: str
+    value: int
 
     def __str__(self) -> str:
         return self.name
@@ -52,26 +52,28 @@ class Define(HasMeta):
     def __int__(self) -> int:
         return self.value
 
+    def __hash__(self) -> int:
+        return hash(self.name)
+
     def __lshift__(self, n: int) -> int:
         return self.value << n
 
     def __repr__(self) -> str:
         return f"{self.name}{{{self.value}}}"
 
-    def __ror__(self, value: Any) -> int:
-        return value | self.value
-
-    def __or__(self, value: Any) -> int:
-        return self.value | value
-
-    def __hash__(self) -> int:
-        return hash(self.name)
-
     def __eq__(self, other: object) -> bool:
         if isinstance(other, Define):
             return self.name == other.name
+        elif isinstance(other, int):
+            return self.value == other
         else:
             return self.name == other
+
+    def __lt__(self, value) -> bool:
+        return self.value < value
+
+    def __gt__(self, value) -> bool:
+        return self.value > value
 
     @property
     def meta(self) -> Meta:
@@ -138,4 +140,4 @@ class LabelDecl(HasMeta):
 
     @property
     def meta(self) -> Meta:
-        return self.label.get_meta
+        return self.label.meta

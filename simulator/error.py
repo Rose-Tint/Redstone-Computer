@@ -1,5 +1,4 @@
 import os.path
-from enum import Enum, auto
 from assembler import ast
 
 
@@ -58,7 +57,7 @@ class InvalidRegister(InvalidInstruction):
         self.add_note(f"Register {register} does not exist")
 
 class InvalidPort(InvalidInstruction):
-    def __init__(self, port: int):
+    def __init__(self, port: int | ast.Define):
         super().__init__()
         self.add_note(f"Port {port} does not exist")
 

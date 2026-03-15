@@ -46,10 +46,3 @@ class HasMeta(ABC):
             return getattr(self, "_meta")
         else:
             raise NotImplemented
-
-# @dataclass
-# class HasMeta:
-#     meta: Meta
-
-#     def __matmul__(self, other: HasMeta):
-#         pass

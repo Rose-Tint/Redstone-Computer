@@ -1,7 +1,6 @@
 import enum
 from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy
-from assembler import Program
-from .common import table_cell, Reloadable, TableCell
+from .common import Reloadable, TableCell
 
 
 class ALUFlags(enum.IntFlag):

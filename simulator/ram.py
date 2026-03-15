@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy, QScrollArea, QTableWidgetItem
+from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy, QScrollArea
 from assembler import Program
-from .common import Reloadable, Word, Addr, READ_COLOR, WRITE_COLOR, TableCell
+from .common import Reloadable, Word, Addr, TableCell
 from .error import InvalidRAMAddress
 
 

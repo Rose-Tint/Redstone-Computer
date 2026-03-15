@@ -1,4 +1,4 @@
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QWidget, QTextEdit
 from PySide6.QtGui import QDragEnterEvent, QDropEvent, QTextDocument, QTextCursor, QTextBlockFormat, QColor
 from assembler import Program, ast

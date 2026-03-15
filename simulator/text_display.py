@@ -1,6 +1,5 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QLineEdit, QGridLayout, QLabel
-from assembler import Program
 from .common import Reloadable
 from .io_ports import Port, Slot
 

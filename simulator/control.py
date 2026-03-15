@@ -1,5 +1,3 @@
-from math import sqrt
-from enum import Enum
 from PySide6.QtCore import Qt, Signal, QTimer, Slot
 from PySide6.QtWidgets import QWidget, QLabel, QGridLayout, QPushButton
 from PySide6.QtWidgets import QSlider

@@ -1,4 +1,4 @@
-from PySide6.QtCore import Slot, QObject, Signal
+from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QWidget
 from assembler import Program, ast
 from assembler.opcode import Opcode
@@ -109,13 +109,13 @@ class CPU(QObject, Reloadable):
             case Opcode.SW:
                 self.ram.write(self.registers.read(rt), self.registers.read(rs))
             case Opcode.LI:
-                self.registers.write(rt, imm)
+                self.registers.write(rt, int(imm))
             case Opcode.CMPI:
-                self.set_flags(self.registers.read(rs) - imm)
+                self.set_flags(self.registers.read(rs) - int(imm))
             case Opcode.ADDI:
-                self.registers.write(rt, self.set_flags(self.registers.read(rs) + imm))
+                self.registers.write(rt, self.set_flags(self.registers.read(rs) + int(imm)))
             case Opcode.SUBI:
-                self.registers.write(rt, self.set_flags(self.registers.read(rs) - imm))
+                self.registers.write(rt, self.set_flags(self.registers.read(rs) - int(imm)))
 
     def jump_encoded(self, opcode, addr):
         match opcode:

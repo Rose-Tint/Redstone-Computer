@@ -88,7 +88,7 @@ class ImmEncoded(Instruction):
         result = super().machine_code()
         result |= self.rs << 8
         result |= self.rt << 5
-        result |= self.imm # type: ignore (super().machine_code() typechecks)
+        result |= int(self.imm) # type: ignore (super().machine_code() typechecks)
         return result
 
 @dataclass
@@ -135,8 +135,8 @@ class SpecEncoded(Instruction):
     def machine_code(self) -> int:
         result = super().machine_code()
         result |= self.rs << 8
-        result |= self.port << 4 # type: ignore (super().machine_code() typechecks)
-        result |= self.imm # type: ignore (super().machine_code() typechecks)
+        result |= int(self.port) << 4 # type: ignore (super().machine_code() typechecks)
+        result |= int(self.imm) # type: ignore (super().machine_code() typechecks)
         return result
 
 

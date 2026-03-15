@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QTableWidget, QWidget, QSizePolicy
-from assembler import Program, ast
-from .common import Word, Reloadable, clamp_word, WRITE_COLOR, TableCell
+from assembler import ast
+from .common import Word, Reloadable, clamp_word, TableCell
 from .error import InvalidRegister
 
 

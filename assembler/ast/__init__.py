@@ -1,6 +1,8 @@
 from .common import *
 from .data import *
+from .instructions import *
 from .macro import *
+from .meta import *
 
 
 ResolvedCode: TypeAlias = list[Instruction]

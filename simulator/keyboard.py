@@ -1,6 +1,5 @@
 from PySide6.QtCore import Qt, Slot, Signal
 from PySide6.QtWidgets import QWidget, QGridLayout, QPushButton, QLineEdit, QSizePolicy
-from assembler import Program
 from utils import Queue
 from .io_ports import Port
 from .common import Reloadable
