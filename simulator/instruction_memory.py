@@ -9,13 +9,13 @@ from .error import EndOfInstrMem, InstrAddrOutOfRange, CallStackOverflow, CallSt
 class InstructionMemory(QTextEdit, Reloadable):
     HIGHLIGHT_BG_COLOR = QColor.fromRgba64(240, 91, 137)
     MIMETYPE = "text/plain"
-    MAX_SIZE = 1024
+    MAX_SIZE: int = 1024
 
     file_dropped = Signal(str)
 
     def __init__(self, parent: QWidget):
         super().__init__(parent, readOnly=True)
-        self.instructions: list[ast.Instruction] = [ast.NOOP] * self.MAX_SIZE
+        self.instructions = [ast.NOOP] * self.MAX_SIZE
         self.call_stack: Stack = Stack()
         self.pc: Addr = 0
         self.setDocument(QTextDocument(self))

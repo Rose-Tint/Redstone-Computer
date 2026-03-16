@@ -6,17 +6,17 @@ from .common import Reloadable
 
 
 class Keyboard(QWidget, Reloadable):
-    ENTER = "\n"
-    RESET = "\x18"
-    BACKSPACE = "\x08"
-    TOP_ROW = "!?:\"%^/•()-+" + BACKSPACE
-    SND_ROW = "1234567890="
-    MID_ROW = "QWERTYUIOP"
-    LWR_ROW = "ASDFGHJKL" + ENTER
-    BTM_ROW = "ZXCVBNM,." + RESET
-    SPACE = " "
-    CONTROL_CHARS = ENTER + RESET + BACKSPACE
-    ACCEPTED_CHARACTERS = TOP_ROW + SND_ROW + MID_ROW + LWR_ROW + BTM_ROW + SPACE
+    ENTER: str = "\n"
+    RESET: str = "\x18"
+    BACKSPACE: str = "\x08"
+    TOP_ROW: str = "!?:\"%^/•()-+" + BACKSPACE
+    SND_ROW: str = "1234567890="
+    MID_ROW: str = "QWERTYUIOP"
+    LWR_ROW: str = "ASDFGHJKL" + ENTER
+    BTM_ROW: str = "ZXCVBNM,." + RESET
+    SPACE: str = " "
+    CONTROL_CHARS: str = ENTER + RESET + BACKSPACE
+    ACCEPTED_CHARACTERS: str = TOP_ROW + SND_ROW + MID_ROW + LWR_ROW + BTM_ROW + SPACE
 
     key_pressed = Signal(str)
 

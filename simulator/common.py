@@ -63,7 +63,7 @@ class LoadProgramEvent(QEvent):
 
 class Reloadable:
     def __init_subclass__(cls: type) -> None:
-        def event(self, event: QEvent) -> bool:
+        def event(self, event: QEvent, /) -> bool:
             if isinstance(event, StepEvent):
                 self.reset()
                 return True
@@ -76,7 +76,7 @@ class Reloadable:
             else:
                 return super(self.__class__, self).event(event)
         if issubclass(cls, QObject):
-            cls.event = event
+            cls.event = event  # ty:ignore[invalid-assignment]
 
     def reset(self) -> None:
         return

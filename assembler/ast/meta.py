@@ -45,4 +45,4 @@ class HasMeta(ABC):
         elif hasattr(self, "_meta"):
             return getattr(self, "_meta")
         else:
-            raise NotImplemented
+            raise NotImplementedError
