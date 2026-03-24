@@ -1,14 +1,15 @@
-%import .core (line, REG, immediate, LABEL, label_decl, NEWLINE, WS_INLINE, COMMENT)
+%import common.WS_INLINE
+%import .core (REG, immediate, LABEL, label_decl, COMMENT, _segment)
 %import .instruction.instruction
 %import .macro.macro_call
 
-code_segment    : ".code" NEWLINE+ line{_code_statement}*
+code_segment    : _segment{".code", _code_statement}
 
 _code_statement : label_decl
-                | code_instr
+                | instruction{REG, immediate, LABEL}
                 | macro_call
 
-?code_instr     : instruction{REG, immediate, LABEL}
+# ?code_instr     : instruction{REG, immediate, LABEL}
 
 %ignore COMMENT
 %ignore WS_INLINE

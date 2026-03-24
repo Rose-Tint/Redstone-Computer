@@ -1,27 +1,25 @@
 from dataclasses import dataclass
 from typing import TypeAlias
 from .meta import Meta, HasMeta
-from .common import Label
+from .common import Name
 
 
 Data: TypeAlias = list[int]
 
-@dataclass
 class DataDef(HasMeta):
-    _meta: Meta
-    label: Label
-    data: Data
+    def __init__(self, name: Name, data: Data):
+        self.name: Name = name
+        self.data: Data = data
 
     @property
     def meta(self) -> Meta:
-        return self._meta
+        return self.name.meta
+
+    @meta.setter
+    def meta(self, new: Meta) -> None:
+        self.name.meta = new
 
 DataSegment: TypeAlias = Data
-# @dataclass
-# class DataSegment:
-#     meta: Meta
-#     data: Data
-
 
 @dataclass
 class Align:

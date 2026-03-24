@@ -1,21 +1,21 @@
 %import common (WS_INLINE, NEWLINE, INT)
-%import .core (line, label_decl, LABEL, DEFINE, CHAR, STRING, COMMENT)
+%import .core (_line, _segment, label_decl, NAME, LABEL, DEFINE, CHAR, STRING, COMMENT)
 
 
-text_segment    : ".text" NEWLINE line{definition}*
+text_segment    : _segment{".text", definition}
 
 definition      : DEFINE "=" INT
 
-data_segment    : ".data" NEWLINE* line{data_def}*
+data_segment    : _segment{".data", data_def}
 
-data_def        : LABEL ":" data_body
+data_def        : NAME ":" data_body
                 | "#align" INT          -> align_data
 
-data_body       : "char" CHAR       -> char_data
-                | "cstring" STRING  -> cstring_data
-                | "pstring" STRING  -> pstring_data
-                | "space" INT       -> space_data
-                | "word" INT        -> word_data
+data_body       : "char" CHAR           -> data_char_type
+                | "cstring" STRING      -> data_cstring_type
+                | "pstring" STRING      -> data_pstring_type
+                | "space" INT           -> data_space_type
+                | "word" INT            -> data_word_type
 
 %ignore COMMENT
 %ignore WS_INLINE

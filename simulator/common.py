@@ -1,13 +1,10 @@
 from typing import TypeAlias
 from assembler import Program
+from assembler.ast import Addr, Word
 from PySide6.QtCore import Qt, QEvent, QObject
 from PySide6.QtWidgets import QTableWidgetItem, QTableWidget, QLabel
 from PySide6.QtGui import QColor
 
-
-Word: TypeAlias = int
-
-Addr: TypeAlias = int
 
 def empty_cell() -> QTableWidgetItem:
     return QTableWidgetItem()

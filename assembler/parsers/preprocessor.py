@@ -1,3 +1,4 @@
+from utils import T
 from dataclasses import dataclass
 from lark import v_args, Discard, Tree, Token
 from .common import Transformer, discard
@@ -37,14 +38,46 @@ class Preprocessor(Transformer):
         return Preprocessed(tree, self.defines)
 
     def definition(self, name: Token, value: int):
-        meta = Meta.from_token(name)
-        define = ast.Define(meta, str(name), value)
+        define = ast.Define(name, value)
         self.defines[name] = define
         return Discard
 
-    def MACRO_PARAM(self, *toks: Token) -> ast.MacroParam:
-        meta = Meta.from_token(toks[0])
-        return ast.MacroParam(meta, "".join(toks))
+    def data_align_type(self, n) -> ast.Align:
+        return ast.Align(n)
+
+    def data_char_type(self, ch: int) -> ast.Data:
+        return [ch]
+
+    def data_cstring_type(self, string: str) -> ast.Data:
+        data: ast.Data = []
+        for ch in string.strip('"'):
+            data.append(ord(ch))
+        data.append(0) # null byte
+        return data
+
+    def data_pstring_type(self, string: str) -> ast.Data:
+        string = string.strip('"')
+        data: ast.Data = [len(string)]
+        for ch in string:
+            data.append(ord(ch))
+        return data
+
+    def data_space_type(self, n: int) -> ast.Data:
+        data: ast.Data = n * [0]
+        return data
+
+    def data_word_type(self, n: int) -> ast.Data:
+        return [n]
+
+    @v_args(inline=False)
+    def lines(self, body: list[T]) -> list[T]:
+        return body
+
+    def REG(self, tok) -> ast.Register:
+        return ast.Register(tok, Meta.from_lark(tok))
+
+    def MACRO_PARAM(self, token: Token) -> ast.MacroParam:
+        return ast.MacroParam(token)
 
     def STRING(self, s) -> str:
         return s.strip('"')
@@ -52,6 +85,20 @@ class Preprocessor(Transformer):
     def CHAR(self, ch: str) -> int:
         ch = ch.strip("'")
         return ord(ch)
+
+    def ESCAPE_CHAR(self, ch: str) -> str:
+        match ch:
+            case "\\a": return "\a"
+            case "\\b": return "\b"
+            case "\\f": return "\f"
+            case "\\n": return "\n"
+            case "\\r": return "\r"
+            case "\\t": return "\t"
+            case "\\v": return "\v"
+            case "\\0": return "\0"
+            case "\\'": return "\'"
+            case '\\"': return "\""
+            case _: return ch
 
     INT = int
 

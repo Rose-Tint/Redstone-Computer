@@ -1,23 +1,17 @@
-from typing import TypeVar, TypeAlias
-from dataclasses import dataclass
-from .common import Register, Immediate, Label, LabelDecl, Define
+from typing import TypeVar, TypeAlias, Generic
+from .common import Register, Immediate, Label, LabelDecl, Define, Zero, Addr
 from .meta import Meta, HasMeta
-from ..opcode import Opcode
+from .opcode import Opcode, OpcodeEnum, NOOP_OPCODE
 
 
-Unresolved = TypeVar("Unresolved")
-Register_T: TypeAlias = Register | Unresolved
-Immediate_T: TypeAlias = Immediate | Unresolved
-Label_T: TypeAlias = Label | Unresolved
+Unresolved_T = TypeVar("Unresolved_T")
+Reg_T: TypeAlias = Register | Unresolved_T
+Imm_T: TypeAlias = Immediate | Unresolved_T
+Lbl_T: TypeAlias = Label | Unresolved_T
 
-@dataclass(init=False)
 class Instruction(HasMeta):
-    _meta: Meta
-    opcode: Opcode
-
-    def __init__(self, meta: Meta, opcode: str):
-        self._meta = meta
-        self.opcode: Opcode = Opcode.get(opcode)
+    def __init__(self, opcode: Opcode):
+        self.opcode: Opcode = opcode
 
     def assert_symbol_resolved(self, value, *exp_types: type):
         if not isinstance(value, exp_types):
@@ -30,9 +24,7 @@ class Instruction(HasMeta):
 
     def machine_code(self) -> int:
         self.assert_resolved()
-        # if not self.assert_resolved():
-            # raise ValueError(f"Unresolved symbol in `{repr(self)}`")
-        return self.opcode << 11
+        return int(self.opcode) << 11
 
     def machine_code_str(self) -> str:
         code = self.machine_code()
@@ -40,13 +32,18 @@ class Instruction(HasMeta):
 
     @property
     def meta(self) -> Meta:
-        return self._meta
+        return self.opcode.meta
 
-@dataclass
+    @meta.setter
+    def meta(self, new: Meta):
+        self.opcode.meta = new
+
 class RegEncoded(Instruction):
-    rs: Register_T
-    rt: Register_T
-    rd: Register_T
+    def __init__(self, opcode: Opcode, rs: Reg_T, rt: Reg_T, rd: Reg_T):
+        super().__init__(opcode)
+        self.rs: Reg_T = rs
+        self.rt: Reg_T = rt
+        self.rd: Reg_T = rd
 
     def assert_resolved(self):
         super().assert_resolved()
@@ -64,11 +61,12 @@ class RegEncoded(Instruction):
         result |= self.rd << 2
         return result
 
-@dataclass
 class ImmEncoded(Instruction):
-    rs: Register_T
-    rt: Register_T
-    imm: Immediate_T
+    def __init__(self, opcode: Opcode, rs: Reg_T, rt: Reg_T, imm: Imm_T):
+        super().__init__(opcode)
+        self.rs: Reg_T = rs
+        self.rt: Reg_T = rt
+        self.imm: Imm_T = imm
 
     def assert_resolved(self):
         super().assert_resolved()
@@ -77,9 +75,9 @@ class ImmEncoded(Instruction):
         self.assert_symbol_resolved(self.imm, int, Define)
 
     def __repr__(self) -> str:
-        if self.opcode is Opcode.LI or self.opcode is Opcode.CMPI:
+        if self.opcode == OpcodeEnum.LI or self.opcode == OpcodeEnum.CMPI:
             return f"{self.opcode} {self.rt} {self.imm}"
-        elif self.opcode is Opcode.LW:
+        elif self.opcode == OpcodeEnum.LW:
             return f"{self.opcode} {self.rt} [{self.rs}]"
         else:
             return f"{self.opcode} {self.rs} {self.rt} {self.imm}"
@@ -88,13 +86,14 @@ class ImmEncoded(Instruction):
         result = super().machine_code()
         result |= self.rs << 8
         result |= self.rt << 5
-        result |= int(self.imm) # type: ignore (super().machine_code() typechecks)
+        result |= int(self.imm)
         return result
 
-@dataclass
 class JumpEncoded(Instruction):
-    label: Label_T
-    addr: int
+    def __init__(self, opcode: Opcode, label: Lbl_T, addr: Addr):
+        super().__init__(opcode)
+        self.label: Lbl_T = label
+        self.addr: Addr = addr
 
     def assert_resolved(self):
         super().assert_resolved()
@@ -108,11 +107,12 @@ class JumpEncoded(Instruction):
         result |= self.addr
         return result
 
-@dataclass
 class SpecEncoded(Instruction):
-    rs: Register_T
-    port: Immediate_T = 0
-    imm: Immediate_T = 0 # currently unused by any instructions
+    def __init__(self, opcode: Opcode, rs: Reg_T, port: Imm_T, imm: Imm_T):
+        super().__init__(opcode)
+        self.rs: Reg_T = rs
+        self.port: Imm_T = port
+        self.imm: Imm_T = imm
 
     def assert_resolved(self):
         super().assert_resolved()
@@ -125,9 +125,9 @@ class SpecEncoded(Instruction):
             )
 
     def __repr__(self) -> str:
-        if self.opcode is Opcode.RETURN or self.opcode is Opcode.EXIT:
+        if self.opcode == OpcodeEnum.RETURN or self.opcode == OpcodeEnum.EXIT:
             return str(self.opcode)
-        elif self.opcode is Opcode.PUSH or self.opcode is Opcode.POP:
+        elif self.opcode == OpcodeEnum.PUSH or self.opcode == OpcodeEnum.POP:
             return f"{self.opcode} {self.rs}"
         else:
             return f"{self.opcode} {self.rs} {self.port}"
@@ -135,13 +135,13 @@ class SpecEncoded(Instruction):
     def machine_code(self) -> int:
         result = super().machine_code()
         result |= self.rs << 8
-        result |= int(self.port) << 4 # type: ignore (super().machine_code() typechecks)
-        result |= int(self.imm) # type: ignore (super().machine_code() typechecks)
+        result |= int(self.port) << 4
+        result |= int(self.imm)
         return result
 
 
-CodeStatement: TypeAlias = LabelDecl | Instruction
+CodeStmt: TypeAlias = LabelDecl | Instruction
 
-CodeSegment: TypeAlias = list[CodeStatement]
+CodeSeg: TypeAlias = list[CodeStmt]
 
-NOOP = RegEncoded(Meta(), Opcode.NOOP, 0, 0 ,0)
+NOOP = RegEncoded(NOOP_OPCODE, Zero, Zero, Zero)

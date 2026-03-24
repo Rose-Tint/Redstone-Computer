@@ -30,7 +30,7 @@ class Simulator(QMainWindow):
         super().__init__()
         self.setWindowTitle("MC CPU Simulator")
         self.setWindowIcon(QPixmap("simulator/assets/redstone_lamp_on.png"))
-        self.current_meta = ast.Meta()
+        self.current_meta = ast.Meta.mk_intrinsic()
         self.current_program: Program | None = None
         self.ports = IOPorts(self)
         self.cpu = CPU(self, self.ports)
