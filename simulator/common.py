@@ -36,7 +36,6 @@ class TableCell(QLabel):
     def set_background(self, value: QColor) -> None:
         self._bg_color = value
         style = f"background-color: #{self._bg_color.rgb():x}"
-        print(f"DEBUG: {style}")
         self.setStyleSheet(style)
 
     def reset_background(self) -> None:

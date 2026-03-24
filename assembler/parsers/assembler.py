@@ -1,3 +1,4 @@
+import warnings
 from typing import Callable
 from lark import v_args, Discard, Token
 from .. import ast
@@ -23,7 +24,16 @@ class Assembler(Transformer):
         for stmt in self.code:
             if isinstance(stmt, ast.JumpEncoded):
                 stmt.addr = self.labels[stmt.label]
-        return ast.Assembly(self.data, self.code)
+        labels: set[ast.Label] = {
+            ast.Label.from_name(name, value) for (name, value) in self.labels.items()
+        }
+        return ast.Assembly(
+            data_segment = self.data,
+            code_segment = self.code,
+            # labels = labels,
+            # defines = set(self.defines.values()),
+            # macros = set(self.macros.values())
+            )
 
     @v_args(inline=False)
     def data_segment(self, datadefs: list[ast.DataDef | ast.Align]):
@@ -35,13 +45,13 @@ class Assembler(Transformer):
                 self.labels[data.name] = len(self.data)
                 self.data.extend(data.data)
             else:
-                print(f"DEBUG: skipping data {data}")
+                warnings.warn(f"skipping data {data}", RuntimeWarning)
 
     def data_def(self, name: ast.Name, data: ast.Data) -> ast.DataDef:
         return ast.DataDef(name, data)
 
     @v_args(inline=False)
-    def code_segment(self, statements: ast.CodeSeg) -> ast.ResolvedCode:
+    def code_segment(self, statements: ast.CodeSegment) -> ast.ResolvedCode:
         i: int = 0
         while i < len(statements):
             stmt = statements[i]
@@ -50,7 +60,7 @@ class Assembler(Transformer):
                 i += 1
             elif isinstance(stmt, ast.MacroCall):
                 macro: ast.Macro = self.macros[stmt.name]
-                expanded: ast.CodeSeg = ast.expand_macro(macro, stmt)
+                expanded: ast.CodeSegment = ast.expand_macro(macro, stmt)
                 statements.pop(i)
                 for j, new_stmt in enumerate(expanded):
                     statements.insert(i + j, new_stmt)
@@ -59,7 +69,7 @@ class Assembler(Transformer):
                 self.pc += 1
                 i += 1
             else:
-                print(f"DEBUG: skipping `{repr(stmt)}`")
+                warnings.warn(f"skipping statement: `{repr(stmt)}`", RuntimeWarning)
                 i += 1
         return self.code
 

@@ -52,7 +52,7 @@ class Label(Name):
     _label_dict: dict[str, Addr] = {}
 
     @overload
-    def __init__(self, name: Token):
+    def __init__(self, name: Token, meta: None = None):
         ...
     @overload
     def __init__(self, name: str, meta: Meta):
@@ -60,6 +60,13 @@ class Label(Name):
     def __init__(self, name: str | Token, meta: Meta | None = None):
         super().__init__(name, meta) # ty: ignore
         self._value: Addr | None = Label._label_dict.get(self.name, None)
+
+    @classmethod
+    def from_name(cls, name: Name, value: Addr | None = None) -> "Label":
+        self = cls(name.name, name.meta)
+        if value is not None:
+            self.value = value
+        return self
 
     def __lshift__(self, n: int) -> int:
         return self.value << n

@@ -2,7 +2,7 @@ from typing import TypeAlias
 from dataclasses import dataclass
 from .common import Name, InstrArg, LabelDecl, Immediate, Register, Label
 from .meta import Meta, HasMeta
-from .instructions import Instruction, RegEncoded, ImmEncoded, JumpEncoded, SpecEncoded, CodeSeg
+from .instructions import Instruction, RegEncoded, ImmEncoded, JumpEncoded, SpecEncoded, CodeSegment
 
 
 class MacroParam(Name):
@@ -70,8 +70,8 @@ class MacroCallArgs:
         else:
             return arg
 
-def expand_macro(macro: Macro, call: MacroCall) -> CodeSeg:
-    body: CodeSeg = []
+def expand_macro(macro: Macro, call: MacroCall) -> CodeSegment:
+    body: CodeSegment = []
     argdict = MacroCallArgs(macro.name, macro.params, call.args)
     for stmt in macro.body:
         if isinstance(stmt, LabelDecl):

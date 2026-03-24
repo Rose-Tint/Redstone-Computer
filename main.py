@@ -10,7 +10,7 @@ if __name__ == "__main__":
         cmd.help()
     else:
         program: Program = assemble(cmd.assembly_filepath)
-        machine_code: list[str] = program.machine_code
+        machine_code: list[str] = program.machine_code_str()
         data: list[int] = program.data
         if cmd.machine_code_dump_path is not None:
             with open(cmd.machine_code_dump_path, 'w') as mc_file:

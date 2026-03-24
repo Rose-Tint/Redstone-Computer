@@ -1,4 +1,4 @@
-from typing import TypeVar, TypeAlias, Generic
+from typing import TypeVar, TypeAlias, Generic, final, Final
 from .common import Register, Immediate, Label, LabelDecl, Define, Zero, Addr
 from .meta import Meta, HasMeta
 from .opcode import Opcode, OpcodeEnum, NOOP_OPCODE
@@ -13,6 +13,7 @@ class Instruction(HasMeta):
     def __init__(self, opcode: Opcode):
         self.opcode: Opcode = opcode
 
+    @final
     def assert_symbol_resolved(self, value, *exp_types: type):
         if not isinstance(value, exp_types):
             raise ValueError(
@@ -26,6 +27,7 @@ class Instruction(HasMeta):
         self.assert_resolved()
         return int(self.opcode) << 11
 
+    @final
     def machine_code_str(self) -> str:
         code = self.machine_code()
         return bin(code)[2:].rjust(16, '0')
@@ -142,6 +144,6 @@ class SpecEncoded(Instruction):
 
 CodeStmt: TypeAlias = LabelDecl | Instruction
 
-CodeSeg: TypeAlias = list[CodeStmt]
+CodeSegment: TypeAlias = list[CodeStmt]
 
-NOOP = RegEncoded(NOOP_OPCODE, Zero, Zero, Zero)
+NOOP: Final[RegEncoded] = RegEncoded(NOOP_OPCODE, Zero, Zero, Zero)
