@@ -10,11 +10,22 @@ class Importer(Visitor):
         self.src_dir: str = src_dir or os.path.dirname(path)
         self.past_imports: list[str] = [path]
 
+    def find_import(self, base: str) -> str:
+        relative = os.path.join(self.src_dir, base)
+        stdlib = os.path.join(os.path.curdir, "stdlib/", base)
+        if base.startswith('/') or os.path.exists(relative):
+            return relative
+        elif os.path.exists(stdlib):
+            return stdlib
+        else:
+            raise ValueError(f"Could not find import `{base}`")
+
     @v_args(tree=True)
     def program(self, tree) -> Tree:
         # start with imports
         for imp in tree.find_data("import_file"):
-            path: str = os.path.join(self.src_dir, imp.children[-1].strip('"'))
+            base: str = imp.children[-1].strip('"')
+            path: str = self.find_import(base)
             if path not in self.past_imports:
                 print(f"Importing {path}...")
                 self.current_file = path

@@ -23,3 +23,6 @@
     wp $zero @PORT_GPU
 .endmacro
 
+.macro clear_screen
+    wp $zero @PORT_GPU
+.endmacro

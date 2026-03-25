@@ -1,3 +1,5 @@
+.import "graphics.asm"
+
 .text
     @PIPE_X_GAP = 8 ; horizontal gap between different pipes
     @PIPE_Y_GAP = 6 ; gap in the pipe
@@ -228,6 +230,3 @@ print:
     pop $r2
     pop $r1
     return
-
-
-.import "graphics.asm"
