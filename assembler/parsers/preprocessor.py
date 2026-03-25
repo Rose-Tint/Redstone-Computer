@@ -55,13 +55,6 @@ class Preprocessor(Transformer):
         data.append(0) # null byte
         return data
 
-    def data_pstring_type(self, string: str) -> ast.Data:
-        string = string.strip('"')
-        data: ast.Data = [len(string)]
-        for ch in string:
-            data.append(ord(ch))
-        return data
-
     def data_space_type(self, n: int) -> ast.Data:
         data: ast.Data = n * [0]
         return data
