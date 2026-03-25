@@ -42,7 +42,7 @@ class Preprocessor(Transformer):
         self.defines[name] = define
         return Discard
 
-    def data_align_type(self, n) -> ast.Align:
+    def align_data(self, n) -> ast.Align:
         return ast.Align(n)
 
     def data_char_type(self, ch: int) -> ast.Data:

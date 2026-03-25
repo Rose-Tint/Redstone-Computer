@@ -17,7 +17,7 @@ if __name__ == "__main__":
                 mc_file.write("\n".join(machine_code) + "\n")
         if cmd.data_dump_path is not None:
             with open(cmd.data_dump_path, 'w') as data_file:
-                data_strs = [str(d) for d in data]
+                data_strs = [bin(d)[2:].rjust(8, '0') for d in data]
                 data_file.write("\n".join(data_strs) + "\n")
         if cmd.simulate:
             Simulator().run(program)

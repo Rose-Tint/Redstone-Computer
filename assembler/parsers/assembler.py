@@ -138,6 +138,9 @@ class Assembler(Transformer):
     def named_imm(self, name) -> int:
         return self.labels[name]
 
+    def NAME(self, label_tok: Token) -> ast.Name:
+        return ast.Name(label_tok)
+
     def DEFINE(self, token: Token) -> ast.Define:
         return self.defines[str(token)] @ token
 
