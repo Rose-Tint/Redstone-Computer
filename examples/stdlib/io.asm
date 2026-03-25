@@ -1,12 +1,8 @@
-.text
-    @TEXT_DISPLAY_BUFFER = 15
-    @TEXT_DISPLAY_FUNCTION = 14
-
-.data
-    string: cstring "Hello, World!"
 
 .code
-    li $r1 string
+; params:
+;   $r1: pointer to cstring to print
+write_cstr:
     rp $zero @TEXT_DISPLAY_FUNCTION
     loop_start:
         lw $r2 [$r1]
@@ -17,4 +13,3 @@
         jump loop_start
     loop_end:
     wp $zero @TEXT_DISPLAY_FUNCTION
-
