@@ -48,7 +48,7 @@ class Preprocessor(Transformer):
     def data_char_type(self, ch: int) -> ast.Data:
         return [ch]
 
-    def data_cstring_type(self, string: str) -> ast.Data:
+    def data_string_type(self, string: str) -> ast.Data:
         data: ast.Data = []
         for ch in string.strip('"'):
             data.append(ord(ch))

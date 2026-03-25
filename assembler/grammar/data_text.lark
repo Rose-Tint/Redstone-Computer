@@ -12,7 +12,7 @@ data_def        : NAME ":" data_body
                 | "#align" INT          -> align_data
 
 data_body       : "char" CHAR           -> data_char_type
-                | "cstring" STRING      -> data_cstring_type
+                | "string" STRING      -> data_string_type
                 | "space" INT           -> data_space_type
                 | "word" INT            -> data_word_type
 

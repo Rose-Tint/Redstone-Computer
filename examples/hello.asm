@@ -3,7 +3,7 @@
     @TEXT_DISPLAY_FUNCTION = 14
 
 .data
-    string: cstring "Hello, World!"
+    string: string "Hello, World!"
 
 .code
     li $r1 string
