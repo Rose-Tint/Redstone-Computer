@@ -21,10 +21,10 @@
     pipe2_y: word 0
     pipe3_y: word 0
     pipe4_y: word 0
-    loading_str: cstring "LOADING..."
-    ready_str: cstring "READY?"
-    go_str: cstring "GO!"
-    game_over_str: cstring "GAME OVER!"
+    loading_str: string "LOADING..."
+    ready_str: string "READY?"
+    go_str: string "GO!"
+    game_over_str: string "GAME OVER!"
 
 .macro load %reg %addr
     li %reg %addr
