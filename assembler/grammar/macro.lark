@@ -1,25 +1,25 @@
-# %import common (LETTER, DIGIT, NEWLINE)
-%import .core (line, label_decl, immediate, REG, LABEL, INT, COMMENT, LETTER, DIGIT, NEWLINE)
+%import common (NEWLINE, WS_INLINE, WS, LETTER, DIGIT)
+%import .core (_line, label_decl, immediate, REG, LABEL, COMMENT, NAME)
 %import .instruction.instruction
 
-macro_call      : LABEL (REG | immediate)*
+macro_call      : NAME (REG | immediate)*
 
-macro_def       : ".macro" LABEL macro_params NEWLINE+ line{macro_statement}* ".endmacro"
+macro_def       : ".macro" NAME macro_params NEWLINE+ _line{_macro_stmt}* ".endmacro"
 
 macro_params    : MACRO_PARAM*
 
-macro_statement : macro_instr
+_macro_stmt     : macro_instr
                 | label_decl
 
-?macro_instr    : instruction{macro_reg, macro_imm, macro_label}
+?macro_instr    : instruction{_macro_reg, _macro_imm, _macro_label}
 
-?macro_reg      : REG | MACRO_PARAM
+_macro_reg       : REG | MACRO_PARAM
 
-?macro_label    : LABEL | MACRO_PARAM
+_macro_label     : LABEL | MACRO_PARAM
 
-?macro_imm      : immediate | MACRO_PARAM
+_macro_imm       : immediate | MACRO_PARAM
 
-MACRO_PARAM     : "%" ("_"|LETTER|DIGIT)+
+MACRO_PARAM           : "%" ("_"|LETTER|DIGIT)+
 
 %ignore COMMENT
 %ignore WS_INLINE

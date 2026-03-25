@@ -1,13 +1,10 @@
 from typing import TypeAlias
 from assembler import Program
+from assembler.ast import Addr, Word
 from PySide6.QtCore import Qt, QEvent, QObject
 from PySide6.QtWidgets import QTableWidgetItem, QTableWidget, QLabel
 from PySide6.QtGui import QColor
 
-
-Word: TypeAlias = int
-
-Addr: TypeAlias = int
 
 def empty_cell() -> QTableWidgetItem:
     return QTableWidgetItem()
@@ -39,7 +36,6 @@ class TableCell(QLabel):
     def set_background(self, value: QColor) -> None:
         self._bg_color = value
         style = f"background-color: #{self._bg_color.rgb():x}"
-        print(f"DEBUG: {style}")
         self.setStyleSheet(style)
 
     def reset_background(self) -> None:
@@ -63,7 +59,7 @@ class LoadProgramEvent(QEvent):
 
 class Reloadable:
     def __init_subclass__(cls: type) -> None:
-        def event(self, event: QEvent) -> bool:
+        def event(self, event: QEvent, /) -> bool:
             if isinstance(event, StepEvent):
                 self.reset()
                 return True
@@ -76,7 +72,7 @@ class Reloadable:
             else:
                 return super(self.__class__, self).event(event)
         if issubclass(cls, QObject):
-            cls.event = event
+            cls.event = event  # ty:ignore[invalid-assignment]
 
     def reset(self) -> None:
         return

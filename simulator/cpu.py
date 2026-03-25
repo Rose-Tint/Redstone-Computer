@@ -1,14 +1,14 @@
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QWidget
 from assembler import Program, ast
-from assembler.opcode import Opcode
 from assembler.ast import Instruction, RegEncoded, ImmEncoded, JumpEncoded, SpecEncoded
+from assembler.ast.opcode import Opcode, OpcodeEnum
 from .instruction_memory import InstructionMemory
 from .register_file import RegisterFile
 from .ram import RAM
 from .alu_flags import FlagsWidget, ALUFlags
 from utils import Stack
-from .common import Word, Reloadable
+from .common import Addr, Word, Reloadable
 from .io_ports import IOPorts
 from .error import SimulatorError, EndOfInstrMem, InvalidInstruction, VarStackOverflow, VarStackEmpty
 
@@ -48,7 +48,7 @@ class CPU(QObject, Reloadable):
             return
         instruction = None
         try:
-            instruction = self.instructions.advance()
+            instruction: Instruction = self.instructions.advance()
             self.meta_update.emit(instruction.meta)
             self.execute(instruction)
         except InvalidInstruction as err:
@@ -79,84 +79,85 @@ class CPU(QObject, Reloadable):
         else:
             raise InvalidInstruction(instr)
 
-    def reg_encoded(self, opcode, rs, rt, rd):
+    def reg_encoded(self, opcode: Opcode, rs: ast.Register, rt: ast.Register, rd: ast.Register) -> None:
         match opcode:
-            case Opcode.NOOP:
+            case OpcodeEnum.NOOP:
                 pass
-            case Opcode.ADD:
+            case OpcodeEnum.ADD:
                 self.registers.write(rd, self.set_flags(self.registers.read(rs) + self.registers.read(rt)))
-            case Opcode.SUB:
+            case OpcodeEnum.SUB:
                 self.registers.write(rd, self.set_flags(self.registers.read(rs) - self.registers.read(rt)))
-            case Opcode.CMP:
+            case OpcodeEnum.CMP:
                 self.set_flags(self.registers.read(rs) - self.registers.read(rt))
-            case Opcode.AND:
+            case OpcodeEnum.AND:
                 self.registers.write(rd, self.set_flags(self.registers.read(rs) & self.registers.read(rt)))
-            case Opcode.OR:
+            case OpcodeEnum.OR:
                 self.registers.write(rd, self.set_flags(self.registers.read(rs) | self.registers.read(rt)))
-            case Opcode.XOR:
+            case OpcodeEnum.XOR:
                 self.registers.write(rd, self.set_flags(self.registers.read(rs) ^ self.registers.read(rt)))
-            case Opcode.NOR:
+            case OpcodeEnum.NOR:
                 self.registers.write(rd, self.set_flags(~(self.registers.read(rs) | self.registers.read(rt))))
 
-    def imm_encoded(self, opcode, rs, rt, imm):
+    def imm_encoded(self, opcode: Opcode, rs: ast.Register, rt: ast.Register, imm: ast.Immediate):
         match opcode:
-            case Opcode.SHL:
+            case OpcodeEnum.SHL:
                 self.registers.write(rt, self.set_flags(self.registers.read(rs) << 1))
-            case Opcode.SHR:
+            case OpcodeEnum.SHR:
                 self.registers.write(rt, self.set_flags(self.registers.read(rs) >> 1))
-            case Opcode.LW:
+            case OpcodeEnum.LW:
                 self.registers.write(rs, self.ram.read(self.registers.read(rt)))
-            case Opcode.SW:
+            case OpcodeEnum.SW:
                 self.ram.write(self.registers.read(rt), self.registers.read(rs))
-            case Opcode.LI:
+            case OpcodeEnum.LI:
                 self.registers.write(rt, int(imm))
-            case Opcode.CMPI:
+            case OpcodeEnum.CMPI:
                 self.set_flags(self.registers.read(rs) - int(imm))
-            case Opcode.ADDI:
+            case OpcodeEnum.ADDI:
                 self.registers.write(rt, self.set_flags(self.registers.read(rs) + int(imm)))
-            case Opcode.SUBI:
+            case OpcodeEnum.SUBI:
                 self.registers.write(rt, self.set_flags(self.registers.read(rs) - int(imm)))
 
-    def jump_encoded(self, opcode, addr):
+    def jump_encoded(self, opcode: Opcode, addr: Addr):
         match opcode:
-            case Opcode.JUMP:
+            case OpcodeEnum.JUMP:
                 self.instructions.jump(addr)
-            case Opcode.CALL:
+            case OpcodeEnum.CALL:
                 self.instructions.push_cs_and_jump(addr)
-            case Opcode.BRZ:
+            case OpcodeEnum.BRZ:
                 if ALUFlags.Zero in self.alu_flags:
                     self.instructions.jump(addr)
-            case Opcode.BNZ:
+            case OpcodeEnum.BNZ:
                 if ALUFlags.Zero not in self.alu_flags:
                     self.instructions.jump(addr)
-            case Opcode.BRO:
+            case OpcodeEnum.BRO:
                 if ALUFlags.Overflow in self.alu_flags:
                     self.instructions.jump(addr)
-            case Opcode.BNO:
+            case OpcodeEnum.BNO:
                 if ALUFlags.Overflow not in self.alu_flags:
                     self.instructions.jump(addr)
-            case Opcode.BRN:
+            case OpcodeEnum.BRN:
                 if ALUFlags.Negative in self.alu_flags:
                     self.instructions.jump(addr)
-            case Opcode.BNN:
+            case OpcodeEnum.BNN:
                 if ALUFlags.Negative not in self.alu_flags:
                     self.instructions.jump(addr)
 
-    def spec_encoded(self, opcode, rs, port, _imm):
+    def spec_encoded(self, opcode: Opcode, rs: ast.Register, port: ast.Immediate, _imm):
+        port: int = int(port)
         match opcode:
-            case Opcode.RETURN:
+            case OpcodeEnum.RETURN:
                 self.instructions.pop_cs_and_jump()
-            case Opcode.RP:
+            case OpcodeEnum.RP:
                 self.registers.write(rs, self.ports[port].read_input())
-            case Opcode.WP:
+            case OpcodeEnum.WP:
                 self.ports[port].write_output(self.registers.read(rs))
-            case Opcode.PUSH:
+            case OpcodeEnum.PUSH:
                 if len(self.var_stack) > 16:
                     raise VarStackOverflow()
                 self.var_stack.push(self.registers.read(rs))
-            case Opcode.POP:
+            case OpcodeEnum.POP:
                 if len(self.var_stack) <= 0:
                     raise VarStackEmpty()
                 self.registers.write(rs, self.var_stack.pop())
-            case Opcode.EXIT:
+            case OpcodeEnum.EXIT:
                 self.finished = True

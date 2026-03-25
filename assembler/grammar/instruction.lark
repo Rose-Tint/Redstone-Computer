@@ -10,8 +10,7 @@ instruction{reg, imm, label}    : NO_ARGS_OP    -> no_args
                 | ONE_REG_IMM_OP reg imm        -> one_reg_imm
                 | PUSH_POP_OP reg               -> push_pop
                 | JUMP_OP label                 -> jump
-                | PSUEDO_NOT_OP reg reg         -> psuedo_not
-                # | PSUEDO_BR_OP reg reg label    -> psuedo_branch
+                # | PSUEDO_NOT_OP reg reg         -> psuedo_not
 
 NO_ARGS_OP      : "noop"i
                 | "return"i
@@ -33,6 +32,7 @@ MEMORY_OP       : "lw"i
 SHIFT_CMP_OP    : "shl"i
                 | "shr"i
                 | "cmp"i
+                | "not"i
 
 ONE_REG_IMM_OP  : "li"i
                 | "rp"i
@@ -44,12 +44,6 @@ PUSH_POP_OP     : "push"i
 
 JUMP_OP         : "jump"i
                 | "call"i
-                # |  "brz"i
-                # |  "bnz"i
-                # |  "bro"i
-                # |  "bno"i
-                # |  "brn"i
-                # |  "bnn"i
                 | ("beq"i | "brz"i)
                 | ("bne"i | "bnz"i)
                 | ("bgt"i | "bro"i)
@@ -57,14 +51,7 @@ JUMP_OP         : "jump"i
                 | ("blt"i | "brn"i)
                 | ("ble"i | "bnn"i)
 
-PSUEDO_NOT_OP   : "not"i
-
-# PSUEDO_BR_OP    : "beq"i
-#                 | "bne"i
-#                 | "bgt"i
-#                 | "bge"i
-#                 | "blt"i
-#                 | "ble"i
+# PSUEDO_NOT_OP   : "not"i
 
 %ignore COMMENT
 %ignore WS_INLINE

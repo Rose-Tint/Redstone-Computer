@@ -8,6 +8,12 @@ label_decl      : LABEL ":"
                 | INT
                 | CHAR
 
+_line{body}     : body NEWLINE+
+
+lines{body}     : _line{body}*
+
+_segment{name, body} : name NEWLINE+ _line{body}*
+
 REG             : "$zero"
                 | "$r1"
                 | "$r2"
@@ -17,17 +23,17 @@ REG             : "$zero"
                 | "$r6"
                 | "$r7"
 
-line{body}     : body NEWLINE+
+DEFINE          : "@" (LETTER|"_") (LETTER|"_"|DIGIT)*
+LABEL           : (LETTER|"_") (LETTER|"_"|DIGIT)*
+NAME            : (LETTER|"_") (LETTER|"_"|DIGIT)*
 
-DEFINE          : "@" LABEL
-
-COMMENT         : ";" /[^\n]*/
-LABEL           : LETTER ("_"|LETTER|DIGIT)*
 ESCAPE_CHAR     : /\\[abfnrtv0\\\'\"]/
 CHAR_INNER      : /[^\'\\]/ | ESCAPE_CHAR
 STRING_INNER    : /[^\"\\]/ | ESCAPE_CHAR
 CHAR            : "'" CHAR_INNER "'"
 STRING          : "\"" STRING_INNER* "\""
+
+COMMENT         : ";" /[^\n]*/
 
 %ignore COMMENT
 %ignore WS_INLINE

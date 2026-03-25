@@ -27,8 +27,6 @@ class RAM(QScrollArea, Reloadable):
         return (row, column)
 
     def read(self, addr: Addr) -> Word:
-        # row, column = self.addr_to_2d(addr)
-        # cell: TableCell = self.table.cellWidget(row, column) # type: ignore
         if addr >= self.MAX_SIZE:
             raise InvalidRAMAddress(addr).add_note(f"Tried to read from address {addr}")
         return self.data[addr]

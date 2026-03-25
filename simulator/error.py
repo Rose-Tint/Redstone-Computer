@@ -7,7 +7,7 @@ class SimulatorError(Exception):
         super().__init__()
         self.title: str = title
         self.title_msg: str | None = msg
-        self.meta: ast.Meta = ast.Meta()
+        self.meta: ast.Meta = ast.Meta.mk_intrinsic()
         self.file: str | None = None
         self.line: int | None = None
         self._notes: list[str] = []

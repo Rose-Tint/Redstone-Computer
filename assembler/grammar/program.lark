@@ -3,15 +3,15 @@
 %import .data_text.data_segment
 %import .data_text.text_segment
 %import .macro.macro_def
-%import core (STRING, COMMENT)
+%import core (_line, STRING, COMMENT)
 
-program     : (WS* _segment)* WS*
+program     : (WS* _top_level)* WS*
 
-_segment    : text_segment
+_top_level  : text_segment
             | macro_def
             | data_segment
             | code_segment
-            | import_file
+            | _line{import_file}
 
 import_file : ".import" STRING
 
